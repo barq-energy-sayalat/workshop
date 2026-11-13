@@ -247,6 +247,8 @@
   .mi.red{background:#fde3e3;color:#b3302c}
   .mi.out{background:#fff3d1;color:#7a5b00}
   .mi.login{background:var(--blue);color:#fff;font-weight:bold;box-shadow:0 5px 12px rgba(74,128,232,.4)}
+  .mi.info{display:block;font-size:12px;line-height:1.9;white-space:pre-line;background:var(--tint)}
+  .mi.info.warnc{background:#fde3e3;color:#b3302c}
   .langlab{font-size:12px;color:#8a97b5;margin-bottom:6px}
   .langrow{display:flex;gap:8px;margin-bottom:18px}
   .lg{flex:1;text-align:center;padding:11px 6px;border-radius:12px;background:var(--tint2);color:var(--dark);
@@ -332,6 +334,7 @@
   .thumb{aspect-ratio:1;border-radius:14px;background:var(--tint);display:grid;place-items:center;font-size:34px;overflow:hidden}
   .thumb img{width:100%;height:100%;object-fit:cover}
   .fname{margin-top:5px;font-size:10.5px;color:#6d7fa6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fcap{margin-top:5px;font-size:10.5px;color:#6d7fa6;line-height:1.4;word-break:break-word}
   .fsize{font-size:10px;color:#9aa7c4;direction:ltr;margin-top:1px}
   .fdel{position:absolute;top:4px;left:4px;width:24px;height:24px;border-radius:50%;background:#fde3e3;
     display:none;place-items:center;font-size:12px}
@@ -506,7 +509,9 @@
   const EQ_SPECS = ["Manufacturer","Model / Serial","Rating"];
   const ACCEPT = "image/*,.pdf,application/pdf,.xls,.xlsx,.xlsm,.csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
   const ACCEPT_DOCS = ACCEPT + ",.doc,.docx,.dwg,.dxf,.txt,.zip";
-  const MAX_FILE = 40*1024*1024;
+  const MAX_FILE = 40*1024*1024;      // hard limit per file
+  const WARN_FILE = 15*1024*1024;     // above this size the admin is asked to confirm
+  const LS_LIMIT = 5*1024*1024;       // approximate localStorage limit of a browser
   const isMCS = n => /^MCS/i.test(n.name);        // panels whose name starts with MCS get a "Reports" section
 
   /* ===== Themes (everyone can pick one; the admin can set the default for everybody) ===== */
@@ -610,6 +615,10 @@
       noPlate:"📷 No nameplate photo yet", uploadPlate:"📷 Upload nameplate photo",
       plateHint:"🔍 Tap the photo to view full screen and zoom", plateAlt:"Motor nameplate",
       big40:"File is larger than 40 MB", big40n:"\"{0}\" is larger than 40 MB", saveFail:"Could not save file",
+      bigWarn:"\"{0}\" is {1} MB. Big files make the app slower. Upload anyway?",
+      noSpace:"Not enough free space on this device to save this file.",
+      stgTitle:"💾 Storage", stgFiles:"Files: {0} used of {1}", stgLs:"Photos & settings: {0} of about {1}",
+      persistOn:"🔒 Protected from automatic cleaning", persistOff:"⚠️ Not protected. Tap here to request protection (installing the app helps).",
       renameBtn:"✏️ Rename", delEq:"🗑 Delete equipment", desc:"Description",
       descPh:"Notes, location, condition, maintenance info...", techSpecs:"Technical specs", photos:"Photos",
       filesTitle:"Files: PDF, drawings, manuals", eqName:"Equipment name:", delEqQ:"Delete \"{0}\" and all its files?",
@@ -618,6 +627,12 @@
       reports:"Reports", rMotors:"Motors report", rEquip:"Equipment report",
       rMotorsDesc:"Motor name, current (A), power (kW) and totals",
       rEquipDesc:"Every motor with its equipment, specs and photos",
+      rPhotoMotor:"Motor photos report", rPhotoMotorDesc:"Nameplate and technical-spec photos of every motor, in one file",
+      rPhotoEquip:"Equipment photos report", rPhotoEquipDesc:"All equipment photos of every motor, in one file",
+      repPhotoMotorTitle:"{0} – Motor photos report", repPhotoEquipTitle:"{0} – Equipment photos report",
+      repPrep:"Preparing the file… (many photos can take a moment)",
+      photosCount:"{0} photos", photosNote:"Only motors that have photos are listed. Tap a photo to enlarge.",
+      noPhotosAll:"No photos found here yet.", thItem:"Item",
       repMotorsTitle:"{0} – Motors report", repEquipTitle:"{0} – Equipment report",
       thMotor:"Motor", thCur:"Current (A)", thPow:"Power (kW)", totalMotors:"Total motors",
       noMotors:"No motors in this panel yet.",
@@ -694,6 +709,10 @@
       noPlate:"📷 هنوز عکس پلاکی ثبت نشده", uploadPlate:"📷 بارگذاری عکس پلاک",
       plateHint:"🔍 برای نمایش تمام‌صفحه و بزرگ‌نمایی روی عکس بزنید", plateAlt:"پلاک موتور",
       big40:"حجم فایل بیشتر از ۴۰ مگابایت است", big40n:"«{0}» بزرگ‌تر از ۴۰ مگابایت است", saveFail:"ذخیرهٔ فایل ممکن نشد",
+      bigWarn:"«{0}» حجمش {1} مگابایت است. فایل‌های بزرگ برنامه را کند می‌کنند. بارگذاری شود؟",
+      noSpace:"فضای خالی این دستگاه برای ذخیرهٔ این فایل کافی نیست.",
+      stgTitle:"💾 حافظه", stgFiles:"فایل‌ها: {0} مصرف از {1}", stgLs:"عکس‌ها و تنظیمات: {0} از حدود {1}",
+      persistOn:"🔒 در برابر پاک شدن خودکار محافظت شده", persistOff:"⚠️ محافظت‌نشده. برای درخواست محافظت اینجا بزنید (نصب برنامه کمک می‌کند).",
       renameBtn:"✏️ تغییر نام", delEq:"🗑 حذف تجهیز", desc:"توضیحات",
       descPh:"یادداشت، محل نصب، وضعیت، اطلاعات تعمیرات...", techSpecs:"مشخصات فنی", photos:"عکس‌ها",
       filesTitle:"فایل‌ها: PDF، نقشه، دفترچه راهنما", eqName:"نام تجهیز:", delEqQ:"«{0}» و همهٔ فایل‌هایش حذف شود؟",
@@ -702,6 +721,12 @@
       reports:"گزارش‌ها", rMotors:"گزارش موتورها", rEquip:"گزارش تجهیزات",
       rMotorsDesc:"نام موتور، جریان (A)، توان (kW) و جمع کل",
       rEquipDesc:"هر موتور با تجهیزات، مشخصات و عکس‌هایش",
+      rPhotoMotor:"گزارش عکس موتورها", rPhotoMotorDesc:"عکس پلاک و مشخصات فنی همهٔ موتورها در یک فایل",
+      rPhotoEquip:"گزارش عکس تجهیزات", rPhotoEquipDesc:"عکس‌های تجهیزات همهٔ موتورها در یک فایل",
+      repPhotoMotorTitle:"{0} – گزارش عکس موتورها", repPhotoEquipTitle:"{0} – گزارش عکس تجهیزات",
+      repPrep:"در حال ساخت فایل… (با عکس‌های زیاد کمی طول می‌کشد)",
+      photosCount:"{0} عکس", photosNote:"فقط موتورهایی که عکس دارند نمایش داده می‌شوند. برای بزرگ‌نمایی روی عکس بزنید.",
+      noPhotosAll:"هنوز عکسی اینجا پیدا نشد.", thItem:"مورد",
       repMotorsTitle:"{0} – گزارش موتورها", repEquipTitle:"{0} – گزارش تجهیزات",
       thMotor:"موتور", thCur:"جریان (A)", thPow:"توان (kW)", totalMotors:"جمع کل موتورها",
       noMotors:"هنوز موتوری در این تابلو نیست.",
@@ -777,6 +802,44 @@
   }
   merge(tree, seed());
   saveTree();
+
+  /* ===== Storage usage, permanent storage and big-file protection ===== */
+  const fmtBytes = b => b >= 1073741824 ? (b/1073741824).toFixed(1) + " GB"
+    : b >= 1048576 ? (b/1048576).toFixed(1) + " MB" : Math.max(1, Math.round(b/1024)) + " KB";
+  function lsBytes(){
+    let n = 0;
+    try{
+      for (let i = 0; i < localStorage.length; i++){
+        const k = localStorage.key(i);
+        n += (k.length + (localStorage.getItem(k) || "").length) * 2;
+      }
+    }catch(e){}
+    return n;
+  }
+  async function storageInfo(){
+    let usage = null, quota = null, persisted = null;
+    try{ if (navigator.storage && navigator.storage.estimate){ const e = await navigator.storage.estimate(); usage = e.usage; quota = e.quota; } }catch(e){}
+    try{ if (navigator.storage && navigator.storage.persisted) persisted = await navigator.storage.persisted(); }catch(e){}
+    return {usage, quota, persisted, ls: lsBytes()};
+  }
+  async function spaceOK(bytes){
+    const s = await storageInfo();
+    if (s.quota == null || s.usage == null) return true;
+    return (s.quota - s.usage) > bytes * 1.5 + 20 * 1048576;
+  }
+  /* checks size limit, asks before big files, checks free space */
+  async function okToStore(file){
+    if (file.size > MAX_FILE){ alert(t("big40n", file.name)); return false; }
+    if (file.size > WARN_FILE && !confirm(t("bigWarn", file.name, (file.size / 1048576).toFixed(1)))) return false;
+    if (!(await spaceOK(file.size))){ alert(t("noSpace")); return false; }
+    return true;
+  }
+  function askPersist(){
+    try{
+      if (navigator.storage && navigator.storage.persist && navigator.storage.persisted)
+        navigator.storage.persisted().then(p => { if (!p) navigator.storage.persist(); });
+    }catch(e){}
+  }
 
   /* ===== Editable texts (admin) + theme ===== */
   /* local edits (admin's device) win; otherwise the texts from config.json (downloaded when online) are used */
@@ -991,15 +1054,16 @@
     path = valid;
     return {node, list};
   }
-  function crumbs(){
+  function crumbArr(){
     let list = tree, names = [];
     for (const id of path){
       const f = list.find(n => n.id === id);
       if (!f) break;
       names.push(f.name); list = f.children;
     }
-    return names.join("  ›  ");
+    return names;
   }
+  function crumbs(){ return crumbArr().join("  ›  "); }
   function ensure(n){
     if (!n.specs) n.specs = DEFAULT_SPECS.map(k => ({k, v:""}));
     else if (!n.pfAdded){
@@ -1037,6 +1101,29 @@
   function closeMenu(){ document.body.classList.remove("menu-open"); }
   $("ov").onclick = closeMenu;
   $("menuBtn2").onclick = openMenu;
+
+  /* storage usage card (admin) */
+  function addStorageInfo(d){
+    const sg = document.createElement("div");
+    sg.className = "mi info";
+    sg.textContent = t("stgTitle") + " …";
+    d.appendChild(sg);
+    storageInfo().then(s => {
+      const lines = [t("stgTitle")];
+      let warn = false;
+      if (s.usage != null && s.quota != null){
+        lines.push(t("stgFiles", fmtBytes(s.usage), fmtBytes(s.quota)));
+        if (s.usage / s.quota > 0.8) warn = true;
+      }
+      lines.push(t("stgLs", fmtBytes(s.ls), fmtBytes(LS_LIMIT)));
+      if (s.ls / LS_LIMIT > 0.8) warn = true;
+      if (s.persisted === true) lines.push(t("persistOn"));
+      else if (s.persisted === false){ lines.push(t("persistOff")); warn = warn || false; }
+      sg.textContent = lines.join("\n");
+      sg.classList.toggle("warnc", warn);
+    });
+    sg.onclick = () => { askPersist(); setTimeout(() => { if (document.body.classList.contains("menu-open")) renderMenu(); }, 700); };
+  }
 
   function renderMenu(){
     const d = $("drawer");
@@ -1092,6 +1179,7 @@
       item(t("login"), () => { closeMenu(); login(); }, "login");
       item(t("forgot"), () => { closeMenu(); forgot(); });
     } else {
+      if (me.owner) addStorageInfo(d);
       item(t("chgPw"), async () => {
         closeMenu();
         const a = prompt(t("newPw"));
@@ -1182,7 +1270,10 @@
   }
 
   /* ===== Main render ===== */
-  const repTitle = k => t(k === "menu" ? "reports" : k === "motors" ? "rMotors" : "rEquip");
+  const REP_TITLES = {menu:"reports", motors:"rMotors", equip:"rEquip", pmotor:"rPhotoMotor", pequip:"rPhotoEquip"};
+  const repTitle = k => t(REP_TITLES[k] || "reports");
+  /* reports are available in zones, electrical rooms and MCS panels (admin + users the admin allowed) */
+  const repAvail = (depth, node) => !!node && canReport() && (depth === 1 || depth === 2 || (depth === 3 && isMCS(node)));
 
   function render(){
     /* not allowed inside? go back to the home dashboard */
@@ -1190,10 +1281,10 @@
     const {node, list} = walk();
     const depth = path.length;
     const root = depth === 0;
-    const zoneMode = depth === 1;               // zone dashboard (photo header + motor stats)
-    const isDetail = depth >= MOTOR_DEPTH;
-    const inRep = !!rep && depth === 3 && isMCS(node) && canReport();
+    const inRep = !!rep && repAvail(depth, node);
     if (!inRep) rep = null;
+    const zoneMode = depth === 1 && !inRep;     // zone dashboard (photo header + motor stats)
+    const isDetail = depth >= MOTOR_DEPTH;
 
     let eq = null;
     if (isDetail){
@@ -1255,7 +1346,7 @@
     const grid = $("grid");
     grid.innerHTML = "";
 
-    if (depth === 3 && isMCS(node) && canReport()){
+    if (repAvail(depth, node)){
       const rc = document.createElement("div");
       rc.className = "card rep";
       rc.innerHTML = '<div class="icon">📊</div><b></b>';
@@ -1696,1142 +1787,4 @@
       tabs.appendChild(b);
     });
 
-    d.append(top, hero, sum, tabs);
-
-    if (tab === "specs"){
-      /* nameplate + key tiles (everyone) */
-      const c1 = h('<div class="mcard"></div>');
-      c1.appendChild(plateBlock(node));
-      const kt = h('<div class="ktiles"></div>');
-      KEYS.forEach(k => kt.appendChild(h(`<div class="kt"><div class="ic">${k[2]}</div><div><div class="kk">${esc(t(k[1]))}</div><div class="kv">${esc(keyVal(node, k) || "—")}</div></div></div>`)));
-      c1.appendChild(kt);
-      d.appendChild(c1);
-
-      /* all parameters (editable) + spec files: only the admin sees and edits these */
-      if (admin){
-        const c2 = h('<div class="mcard"></div>');
-        c2.appendChild(specsBlock(node.specs, t("allParams"), () => renderDetail(node)));
-        d.appendChild(c2);
-
-        const c3 = h('<div class="mcard"></div>');
-        c3.appendChild(filesBlock(node.specFiles, t("otherSpec"), undefined, f => ocrFill(node.specs, f)));
-        d.appendChild(c3);
-      }
-    }
-
-    if (tab === "equip"){
-      const c = h('<div class="mcard"></div>');
-      const sec = section(t("usedEquip"));
-      const grid = h('<div class="ecards"></div>');
-      node.equip.forEach(q => {
-        const model = (q.specs.find(s => /model|serial|type|مدل|سریال/i.test(s.k)) || {}).v || "";
-        const el = h(`<div class="ec"><div class="ei">${eqIcon(q.name)}</div><b>${esc(q.name)}</b><small>${esc(model || t("eqCounts", q.specs.length, q.photos.length, q.files.length))}</small></div>`);
-        const e1 = mini("✏️", () => renameEquip(q)); e1.classList.add("m1");
-        const e2 = mini("🗑", () => removeEquip(node, q)); e2.classList.add("m2");
-        el.append(e1, e2);
-        el.onclick = () => openEquip(q.id);
-        grid.appendChild(el);
-      });
-      sec.appendChild(grid);
-      if (!node.equip.length && !admin){
-        const e = document.createElement("div");
-        e.className = "nofile"; e.style.gridColumn = "auto";
-        e.textContent = t("noEquip");
-        sec.appendChild(e);
-      }
-      const add = document.createElement("button");
-      add.className = "addbtn"; add.textContent = t("addEquip");
-      add.style.marginTop = "12px";
-      add.onclick = () => {
-        const name = (prompt(t("eqPrompt")) || "").trim();
-        if (!name) return;
-        node.equip.push({id: uid(), name, desc:"", specs: EQ_SPECS.map(k => ({k, v:""})), photos:[], files:[]});
-        saveTree(); renderDetail(node);
-      };
-      sec.appendChild(add);
-      c.appendChild(sec);
-      d.appendChild(c);
-    }
-
-    if (tab === "draw"){
-      const c = h('<div class="mcard"></div>');
-      c.appendChild(filesBlock(node.drawFiles, t("docsTitle")));
-      d.appendChild(c);
-    }
-  }
-
-  /* ===== Nameplate (original quality, tap to zoom) ===== */
-  function plateBlock(node){
-    const box = document.createElement("div");
-    box.className = "plate";
-    const inp = document.createElement("input");
-    inp.type = "file"; inp.accept = "image/*"; inp.style.display = "none";
-    inp.onchange = () => { if (inp.files[0]) setPlate(node, inp.files[0]); };
-    box.appendChild(inp);
-
-    if (node.plate){
-      const im = new Image();
-      im.alt = t("plateAlt");
-      dbGet(node.plate.id).then(b => {
-        if (!b) return;
-        const u = URL.createObjectURL(b);
-        im.src = u;
-        im.onclick = () => openLightbox(u);
-      });
-      const hint = document.createElement("div");
-      hint.className = "hint"; hint.textContent = t("plateHint");
-      box.append(im, hint);
-      const bar = document.createElement("div");
-      bar.className = "pbtns";
-      bar.append(
-        pbtn(t("replace"), () => inp.click()),
-        pbtn(t("delPhoto"), async () => {
-          if (!confirm(t("delPlateQ"))) return;
-          await dbDel(node.plate.id);
-          node.plate = null; saveTree(); renderDetail(node);
-        }, "red")
-      );
-      box.appendChild(bar);
-    } else {
-      const none = document.createElement("div");
-      none.className = "none"; none.textContent = t("noPlate");
-      box.appendChild(none);
-      const bar = document.createElement("div");
-      bar.className = "pbtns";
-      bar.appendChild(pbtn(t("uploadPlate"), () => inp.click()));
-      box.appendChild(bar);
-    }
-    return box;
-  }
-  async function setPlate(node, file){
-    if (!admin || !file) return;
-    if (file.size > MAX_FILE){ alert(t("big40")); return; }
-    const id = uid();
-    try { await dbPut(id, file); } catch(e){ alert(t("saveFail")); return; }   // original, no resizing
-    if (node.plate) dbDel(node.plate.id);
-    node.plate = {id, name: file.name, type: file.type || "image/jpeg"};
-    saveTree(); renderDetail(node);
-    await ocrFill(node.specs, file);                 // read the nameplate and fill the parameters
-  }
-
-  /* ================================================================
-     OCR: read parameters from a nameplate / equipment photo
-     (Tesseract.js is downloaded from the internet the first time)
-     ================================================================ */
-  let toastT = null;
-  function toast(msg, ms){
-    const tt = $("toast");
-    clearTimeout(toastT);
-    if (!msg){ tt.style.display = "none"; return; }
-    tt.textContent = msg; tt.style.display = "block";
-    if (ms) toastT = setTimeout(() => { tt.style.display = "none"; }, ms);
-  }
-
-  let tessP = null;
-  function loadTess(){
-    if (window.Tesseract) return Promise.resolve();
-    if (!tessP) tessP = new Promise((res, rej) => {
-      const s = document.createElement("script");
-      s.src = "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";
-      s.onload = res;
-      s.onerror = () => { tessP = null; rej(new Error("load")); };
-      document.head.appendChild(s);
-    });
-    return tessP;
-  }
-
-  /* upscale + grayscale + contrast stretch → better OCR on metal plates */
-  async function prepImage(file){
-    const url = URL.createObjectURL(file);
-    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
-    const k = Math.min(2, 2200 / Math.max(img.width, img.height));
-    const c = document.createElement("canvas");
-    c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
-    const x = c.getContext("2d");
-    x.drawImage(img, 0, 0, c.width, c.height);
-    URL.revokeObjectURL(url);
-    const d = x.getImageData(0, 0, c.width, c.height), p = d.data;
-    let lo = 255, hi = 0;
-    for (let i = 0; i < p.length; i += 4){
-      const g = (p[i]*0.3 + p[i+1]*0.59 + p[i+2]*0.11) | 0;
-      p[i] = p[i+1] = p[i+2] = g;
-      if (g < lo) lo = g; if (g > hi) hi = g;
-    }
-    const s = 255 / Math.max(1, hi - lo);
-    for (let i = 0; i < p.length; i += 4){
-      const v = Math.min(255, Math.max(0, (p[i] - lo) * s));
-      p[i] = p[i+1] = p[i+2] = v;
-    }
-    x.putImageData(d, 0, 0);
-    return new Promise(res => c.toBlob(res, "image/png"));
-  }
-
-  async function ocrText(file){
-    await loadTess();
-    const blob = await prepImage(file);
-    const worker = await Tesseract.createWorker("eng", 1, {
-      logger: m => { if (m.status === "recognizing text") toast(t("ocrPct", Math.round(m.progress*100)), 0); }
-    });
-    try { await worker.setParameters({tessedit_pageseg_mode: "11"}); } catch(e){}
-    const {data} = await worker.recognize(blob);
-    await worker.terminate();
-    return data.text || "";
-  }
-
-  const BRANDS = ["Siemens","ABB","WEG","Leroy[- ]?Somer","Nidec","Schneider","Toshiba","Hyundai","TECO","Mitsubishi",
-    "Brook Crompton","Crompton","Marathon","Baldor","Emerson","Lenze","SEW","Bonfiglioli","Grundfos","KSB","Lowara",
-    "Sulzer","Franklin","Wilo","Hitachi","Fuji","Yaskawa","Danfoss","Rockwell","Allen[- ]?Bradley","Eaton","Moeller",
-    "Legrand","Omron","Phoenix Contact","LS Electric","LSIS","Havells","CG Power","Kirloskar","Hyosung","Motogen",
-    "Electrogen","Pars Electric","Ebara","Pedrollo","VEM","Telemecanique","General Electric"];
-  const BRAND_RE = new RegExp("\\b(" + BRANDS.join("|") + ")\\b", "i");
-  const prettyBrand = s => { s = s.replace(/\s+/g, " ").trim(); return s.length <= 4 ? s.toUpperCase() : s.replace(/\b\w/g, c => c.toUpperCase()).replace(/\B\w/g, c => c.toLowerCase()); };
-
-  function parsePlate(raw){
-    const tx_ = String(raw).replace(/[‐‑‒–—−]/g, "-").replace(/\u00a0/g, " ");
-    const dot = s => s.replace(/,/g, ".");
-    const f = {};
-    let m;
-    if ((m = tx_.match(/(\d+(?:[.,]\d+)?)\s*k\s?W\b/i))) f.power = dot(m[1]);
-    else if ((m = tx_.match(/(\d+(?:[.,]\d+)?)\s*(?:HP|CV|PS)\b/i))){
-      const hp = parseFloat(dot(m[1]));
-      f.power = String(Math.round(hp * (/hp/i.test(m[0]) ? 0.7457 : 0.7355) * 100) / 100);
-      f.hp = true;
-    }
-    if ((m = tx_.match(/((?:\d{2,4}\s*[YΔ∆]?\s*[\/-]\s*)?\d{2,4}\s*[YΔ∆]?)\s*V(?![A-Za-z])/))) f.voltage = m[1].replace(/\s+/g, "");
-    if ((m = tx_.match(/\b(\d+(?:[.,]\d+)?(?:\s*[\/-]\s*\d+(?:[.,]\d+)?)?)\s*A(?![A-Za-z])/))) f.current = dot(m[1]).replace(/\s+/g, "");
-    if ((m = tx_.match(/(\d{3,5})\s*(?:r\s?\/?\s?min|rpm|min\s*-?\s*1|U\s?\/\s?min|1\s?\/\s?min)/i))) f.speed = m[1];
-    if ((m = tx_.match(/\b(\d{2}(?:\s*\/\s*\d{2})?)\s*Hz/i))) f.freq = m[1].replace(/\s+/g, "");
-    if ((m = tx_.match(/cos\s*\S{0,2}\s*[:=]?\s*(0[.,]\d{1,3})/i)) || (m = tx_.match(/\bp\.?f\.?\s*[:=]?\s*(0[.,]\d{1,3})/i))) f.pf = dot(m[1]);
-    if ((m = tx_.match(/\bIP\s?(\d{2}[A-Z]?)\b/))) f.ip = "IP" + m[1];
-    if ((m = tx_.match(/(?:ins(?:ul)?\.?\s*cl(?:ass)?\.?|therm\.?\s*cl(?:ass)?\.?|insulation\s*class|isol\.?\s*class)\s*[:.]?\s*([ABEFH])\b/i)) ||
-        (m = tx_.match(/\bcl(?:ass)?\.?\s*([BFH])\b/i))) f.ins = m[1].toUpperCase();
-    if ((m = tx_.match(/\b(?:s\/n|serial(?:\s*(?:no|nr|number))?|ser\.?\s*(?:no|nr)|serien-?nr)\.?\s*[:.#]?\s*((?=[A-Z0-9\/.\-]*\d)[A-Z0-9][A-Z0-9\/.\-]{3,})/i))) f.serial = m[1].toUpperCase();
-    if ((m = tx_.match(/\b(?:TYPE|Type|TYP|Typ|MODEL|Model|MOD)\.?\s*[:.]?\s*([A-Z0-9][A-Z0-9\/.\-]{2,}(?:\s[A-Z0-9][A-Z0-9\/.\-]{1,})?)/))) f.model = m[1].trim();
-    if ((m = tx_.match(BRAND_RE))) f.manuf = prettyBrand(m[1]);
-    return f;
-  }
-
-  /* spec rows to fill: [found key, English label used when the row doesn't exist, matches existing row, must NOT match] */
-  const OCR_FIELDS = [
-    ["power",   "Power (kW)",          /power|\bkw\b|توان/i, /factor|cos|φ|ضریب/i],
-    ["voltage", "Voltage (V)",         /volt|ولتاژ/i],
-    ["current", "Current (A)",         /current|\(a\)|amp|جریان|آمپر/i],
-    ["speed",   "Speed (RPM)",         /speed|rpm|دور/i],
-    ["freq",    "Frequency (Hz)",      /freq|hz|فرکانس/i],
-    ["pf",      "Power factor (cos φ)",/power factor|cos|φ|ضریب توان/i],
-    ["ins",     "Insulation class",    /insul|عایق/i],
-    ["ip",      "IP rating",           /\bip\b|حفاظت/i],
-    ["manuf",   "Manufacturer",        /manufact|brand|maker|سازنده|برند/i],
-    ["ms",      "Model / Serial",      /model|serial|type|مدل|سریال/i]
-  ];
-  /* fills empty rows, adds missing rows, never overwrites a value that is already there */
-  function applySpecs(specs, found){
-    const done = [], skipped = [];
-    OCR_FIELDS.forEach(([key, label, re, not]) => {
-      const val = key === "ms" ? [found.model, found.serial].filter(Boolean).join(" / ") : found[key];
-      if (!val) return;
-      const s = specs.find(x => re.test(x.k) && !(not && not.test(x.k)));
-      if (s){
-        if (!String(s.v || "").trim()){ s.v = val; done.push([specLabel(s.k), val]); }
-        else skipped.push([specLabel(s.k), val]);
-      } else { specs.push({k: label, v: val}); done.push([specLabel(label), val]); }
-    });
-    return {done, skipped};
-  }
-
-  function showResult(res, found){
-    return new Promise(resolve => {
-      const b = $("modBox");
-      b.innerHTML = "";
-      const hh = document.createElement("h3"); hh.textContent = t("ocrRead"); b.appendChild(hh);
-      const list = (title, arr) => {
-        if (!arr.length) return;
-        const tt = document.createElement("div"); tt.className = "sub"; tt.textContent = title; b.appendChild(tt);
-        arr.forEach(([k, v]) => {
-          const r = document.createElement("div"); r.className = "row";
-          const a = document.createElement("span"); a.textContent = k;
-          const c = document.createElement("b"); c.textContent = v;
-          r.append(a, c); b.appendChild(r);
-        });
-      };
-      if (!res.done.length && !res.skipped.length){
-        const p = document.createElement("div"); p.className = "tip";
-        p.textContent = t("ocrNone");
-        b.appendChild(p);
-      }
-      list(t("ocrFilled"), res.done);
-      list(t("ocrKept"), res.skipped);
-      const tip = document.createElement("div"); tip.className = "tip";
-      tip.textContent = t("ocrTip") + (found.hp ? " " + t("ocrHp") : "");
-      b.appendChild(tip);
-      const ok = document.createElement("div"); ok.className = "ok"; ok.textContent = t("ok");
-      ok.onclick = () => { $("mod").style.display = "none"; resolve(); };
-      b.appendChild(ok);
-      $("mod").style.display = "grid";
-    });
-  }
-
-  async function ocrFill(specs, file){
-    if (!admin || !file || !(file.type || "").startsWith("image/")) return;
-    toast(t("ocrReading"), 0);
-    let text;
-    try { text = await ocrText(file); }
-    catch(e){
-      console.error(e);
-      toast(t("ocrFail"), 6000);
-      return;
-    }
-    toast("");
-    const found = parsePlate(text);
-    const res = applySpecs(specs, found);
-    saveTree();
-    render();
-    await showResult(res, found);
-  }
-
-  /* ===== Equipment page ===== */
-  function openEquip(id){
-    eqOpen = id;
-    history.pushState({p:[...path], e:id, r:null}, "");
-    render(); window.scrollTo(0,0);
-  }
-  function renameEquip(q){
-    const n = (prompt(t("eqName"), q.name) || "").trim();
-    if (!n) return;
-    q.name = n; saveTree(); render();
-  }
-  function removeEquip(node, q){
-    if (!confirm(t("delEqQ", q.name))) return;
-    [...q.photos, ...q.files].forEach(f => dbDel(f.id));
-    node.equip.splice(node.equip.indexOf(q), 1);
-    saveTree();
-    if (eqOpen === q.id){ eqOpen = null; history.back(); } else render();
-  }
-  function renderEquip(node, q){
-    ensureEq(q);
-    const d = $("detail");
-    d.innerHTML = "";
-    const re = () => renderEquip(node, q);
-
-    if (admin){
-      const bar = document.createElement("div");
-      bar.className = "pbtns";
-      bar.append(
-        pbtn(t("renameBtn"), () => renameEquip(q)),
-        pbtn(t("delEq"), () => removeEquip(node, q), "red")
-      );
-      d.appendChild(bar);
-    }
-
-    const ds = section(t("desc"));
-    if (admin){
-      const ta = document.createElement("textarea");
-      ta.className = "desc"; ta.value = q.desc; ta.placeholder = t("descPh");
-      ta.oninput = () => { q.desc = ta.value; saveTree(); };
-      ds.appendChild(ta);
-    } else {
-      const v = document.createElement("div");
-      v.className = "descv"; v.textContent = q.desc || "—";
-      ds.appendChild(v);
-    }
-    d.appendChild(ds);
-
-    d.appendChild(specsBlock(q.specs, t("techSpecs"), re));
-    d.appendChild(filesBlock(q.photos, t("photos"), "image/*", f => ocrFill(q.specs, f)));
-    d.appendChild(filesBlock(q.files, t("filesTitle"), ACCEPT_DOCS));
-  }
-
-  /* ===== Files block (images / PDF / Excel / docs) ===== */
-  function kind(f){
-    if ((f.type||"").startsWith("image/")) return "img";
-    if (/pdf/i.test(f.type||"") || /\.pdf$/i.test(f.name)) return "pdf";
-    if (/\.(xls|xlsx|xlsm|csv)$/i.test(f.name) || /sheet|excel|csv/i.test(f.type||"")) return "xls";
-    if (/\.(doc|docx)$/i.test(f.name)) return "doc";
-    if (/\.(dwg|dxf)$/i.test(f.name)) return "cad";
-    return "file";
-  }
-  const KIND_ICON = {pdf:"📕", xls:"📗", doc:"📘", cad:"📐", file:"📄"};
-  const fmtSize = b => b >= 1048576 ? (b/1048576).toFixed(1) + " MB" : Math.max(1, Math.round(b/1024)) + " KB";
-
-  function filesBlock(arr, title, accept, onImg){
-    const sec = section(title);
-    const grid = document.createElement("div");
-    grid.className = "fgrid";
-
-    arr.forEach(f=>{
-      const it = document.createElement("div");
-      it.className = "fitem";
-      const th = document.createElement("div");
-      th.className = "thumb";
-      const k = kind(f);
-      if (k === "img"){
-        const im = document.createElement("img");
-        th.appendChild(im);
-        dbGet(f.id).then(b => { if (b) im.src = URL.createObjectURL(b); });
-      } else th.textContent = KIND_ICON[k] || "📄";
-      const nm = document.createElement("div");
-      nm.className = "fname"; nm.textContent = f.name;
-      const x = document.createElement("span");
-      x.className = "fdel"; x.textContent = "🗑";
-      x.onclick = e => { e.stopPropagation(); if (admin) removeFile(arr, f); };
-      it.append(th, nm);
-      if (f.size){
-        const sz = document.createElement("div");
-        sz.className = "fsize"; sz.textContent = fmtSize(f.size);
-        it.appendChild(sz);
-      }
-      it.appendChild(x);
-      it.onclick = () => openFile(f);
-      grid.appendChild(it);
-    });
-
-    if (!arr.length && !admin){
-      const e = document.createElement("div");
-      e.className = "nofile"; e.textContent = t("noFiles");
-      grid.appendChild(e);
-    }
-
-    const tile = document.createElement("div");
-    tile.className = "ftile"; tile.textContent = "+";
-    const inp = document.createElement("input");
-    inp.type = "file"; inp.multiple = true; inp.accept = accept || ACCEPT; inp.style.display = "none";
-    inp.onchange = () => { if (admin && inp.files.length) addFiles(arr, [...inp.files], onImg); };
-    tile.onclick = () => inp.click();
-    grid.append(tile, inp);
-
-    sec.appendChild(grid);
-    return sec;
-  }
-
-  function imgBlob(file, max){
-    return new Promise(res => {
-      const img = new Image();
-      img.onload = () => {
-        const r = Math.min(1, max / Math.max(img.width, img.height));
-        const c = document.createElement("canvas");
-        c.width = Math.round(img.width * r); c.height = Math.round(img.height * r);
-        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-        URL.revokeObjectURL(img.src);
-        c.toBlob(b => res(b || file), "image/jpeg", 0.9);
-      };
-      img.onerror = () => res(file);
-      img.src = URL.createObjectURL(file);
-    });
-  }
-  async function addFiles(arr, files, onImg){
-    const imgs = [];
-    for (const f of files){
-      if (f.size > MAX_FILE){ alert(t("big40n", f.name)); continue; }
-      let blob = f, type = f.type;
-      if ((f.type||"").startsWith("image/")){ blob = await imgBlob(f, 2400); type = "image/jpeg"; }
-      const id = uid();
-      try { await dbPut(id, blob); } catch(e){ alert(t("saveFail")); continue; }
-      arr.push({id, name: f.name, type, size: f.size});
-      if (onImg && (f.type||"").startsWith("image/")) imgs.push(f);
-    }
-    saveTree(); render();
-    for (const f of imgs) await onImg(f);          // read each new photo (one after the other)
-  }
-  async function removeFile(arr, f){
-    if (!confirm(t("delFileQ", f.name))) return;
-    await dbDel(f.id);
-    arr.splice(arr.indexOf(f), 1);
-    saveTree(); render();
-  }
-  async function openFile(f){
-    const b = await dbGet(f.id);
-    if (!b){ alert(t("notFound")); return; }
-    const url = URL.createObjectURL(new Blob([b], {type: f.type || b.type}));
-    const k = kind(f);
-    if (k === "img"){ openLightbox(url); return; }
-    if (k === "pdf"){ if (window.open(url, "_blank")) return; }
-    const a = document.createElement("a");
-    a.href = url; a.download = f.name; a.click();
-  }
-
-  /* ===== Fullscreen viewer with zoom (pinch, double tap, wheel) ===== */
-  let Z = {s:1, x:0, y:0}, pts = new Map(), startDist = 1, startS = 1, lastTap = 0;
-  const clampZ = v => Math.min(8, Math.max(1, v));
-  const applyZ = () => { $("lbImg").style.transform = `translate(${Z.x}px,${Z.y}px) scale(${Z.s})`; };
-  function openLightbox(url){
-    Z = {s:1, x:0, y:0}; pts.clear(); applyZ();
-    $("lbImg").src = url;
-    $("lb").style.display = "grid";
-  }
-  function closeLightbox(){
-    $("lb").style.display = "none";
-    $("lbImg").removeAttribute("src");
-  }
-  $("lbClose").onclick = closeLightbox;
-  $("lb").addEventListener("click", e => { if (e.target === $("lb")) closeLightbox(); });
-
-  const li = $("lbImg");
-  li.addEventListener("pointerdown", e => {
-    li.setPointerCapture(e.pointerId);
-    pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
-    if (pts.size === 2){
-      const [a,b] = [...pts.values()];
-      startDist = Math.hypot(a.x-b.x, a.y-b.y) || 1; startS = Z.s;
-    }
-    const now = Date.now();
-    if (pts.size === 1 && now - lastTap < 300){
-      Z = Z.s > 1 ? {s:1, x:0, y:0} : {s:2.5, x:0, y:0};
-      applyZ();
-    }
-    lastTap = now;
-  });
-  li.addEventListener("pointermove", e => {
-    const p = pts.get(e.pointerId);
-    if (!p) return;
-    const dx = e.clientX - p.x, dy = e.clientY - p.y;
-    p.x = e.clientX; p.y = e.clientY;
-    if (pts.size === 2){
-      const [a,b] = [...pts.values()];
-      Z.s = clampZ(startS * Math.hypot(a.x-b.x, a.y-b.y) / startDist);
-    } else if (Z.s > 1){
-      Z.x += dx; Z.y += dy;
-    }
-    if (Z.s <= 1){ Z.x = 0; Z.y = 0; }
-    applyZ();
-  });
-  const upZ = e => { pts.delete(e.pointerId); };
-  li.addEventListener("pointerup", upZ);
-  li.addEventListener("pointercancel", upZ);
-  $("lb").addEventListener("wheel", e => {
-    e.preventDefault();
-    Z.s = clampZ(Z.s * (e.deltaY < 0 ? 1.15 : 0.87));
-    if (Z.s <= 1){ Z.x = 0; Z.y = 0; }
-    applyZ();
-  }, {passive:false});
-
-  /* ================================================================
-     REPORTS (MCS panels): data is read live from the stored tree
-     Available to the admin and to users the admin allowed.
-     ================================================================ */
-  const byName = (a,b) => a.name.localeCompare(b.name, undefined, {numeric:true});
-  const r2 = x => Math.round(x*100)/100;
-  const fmtN = v => v == null ? "—" : String(r2(v));
-  const num = v => { const m = String(v||"").replace(",",".").match(/-?\d+(?:\.\d+)?/); return m ? parseFloat(m[0]) : null; };
-  const findSpec = (m, re, not) => { const s = m.specs.find(x => re.test(x.k) && !(not && not.test(x.k))); return s ? s.v : ""; };
-  const motorA  = m => num(findSpec({specs: m.specs || []}, /current|\(a\)|amp|جریان|آمپر/i));
-  const motorKW = m => num(findSpec({specs: m.specs || []}, /power|\bkw\b|توان/i, /factor|cos|φ|ضریب/i));
-  const esc = s => String(s==null ? "" : s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-  const safe = s => String(s).replace(/[^\w\-]+/g, "_");
-  const today = () => new Date().toISOString().slice(0,10);
-  const stamp = () => isRTL() ? new Date().toLocaleString("fa-IR-u-nu-latn") : new Date().toLocaleString("en-GB");
-
-  function dataMotors(panel){
-    const ms = [...panel.children].sort(byName);
-    let a = 0, kw = 0;
-    const rows = ms.map((m,i) => {
-      ensure(m);
-      const A = motorA(m), K = motorKW(m);
-      if (A != null) a += A;
-      if (K != null) kw += K;
-      return {i:i+1, name:m.name, a:A, kw:K};
-    });
-    return {kind:"motors", title:t("repMotorsTitle", panel.name), sub:crumbs(), date:stamp(),
-            base:`${safe(panel.name)}_motors_report_${today()}`,
-            rows, total:{count:ms.length, a:r2(a), kw:r2(kw)}};
-  }
-  function dataEquip(panel){
-    const ms = [...panel.children].sort(byName);
-    return {kind:"equip", title:t("repEquipTitle", panel.name), sub:crumbs(), date:stamp(),
-            base:`${safe(panel.name)}_equipment_report_${today()}`,
-            motors: ms.map(m => {
-              ensure(m);
-              return {name:m.name, equip:[...m.equip].sort(byName).map(q => {
-                ensureEq(q);
-                return {name:q.name, desc:q.desc, specs:q.specs.map(s => [specLabel(s.k), s.v || "—"]), photos:q.photos, files:q.files};
-              })};
-            })};
-  }
-
-  function openRep(k){
-    if (!canReport()) return;
-    rep = k;
-    history.pushState({p:[...path], e:null, r:k}, "");
-    render(); window.scrollTo(0,0);
-  }
-
-  function renderReports(panel){
-    const d = $("detail");
-    d.innerHTML = "";
-    if (rep === "menu"){
-      [["📋",t("rMotors"),t("rMotorsDesc"),"motors"],
-       ["🧰",t("rEquip"),t("rEquipDesc"),"equip"]].forEach(([ic,title,s,k]) => {
-        const row = document.createElement("div");
-        row.className = "eqrow";
-        const n = document.createElement("div");
-        n.className = "n"; n.textContent = ic + " " + title;
-        const sm = document.createElement("small"); sm.textContent = s;
-        n.appendChild(sm);
-        const go = document.createElement("span"); go.className = "go"; go.textContent = "›";
-        row.append(n, go);
-        row.onclick = () => openRep(k);
-        d.appendChild(row);
-      });
-      return;
-    }
-    if (rep === "motors") return viewMotors(d, dataMotors(panel));
-    viewEquip(d, dataEquip(panel));
-  }
-
-  function exportBar(D){
-    const bar = document.createElement("div");
-    bar.className = "rhead";
-    [["📗 Excel","x", async () => dl(xlsxBlob(D), D.base + ".xlsx")],
-     ["📕 PDF","p",   () => exportPDF(D)],
-     ["📘 Word","w",  async () => dl(await docxBlob(D), D.base + ".docx")]
-    ].forEach(([txt,c,fn]) => {
-      const b = document.createElement("div");
-      b.className = "rexp " + c; b.textContent = txt;
-      b.onclick = async () => {
-        if (b.dataset.busy) return;
-        b.dataset.busy = "1"; b.textContent = "…";
-        try { await fn(); } catch(e){ console.error(e); alert(t("exportFail")); }
-        b.textContent = txt; delete b.dataset.busy;
-      };
-      bar.appendChild(b);
-    });
-    return bar;
-  }
-  function metaBlock(D){
-    const m = document.createElement("div");
-    m.className = "rmeta";
-    m.textContent = D.sub + "  ·  " + D.date;
-    return m;
-  }
-
-  function viewMotors(d, D){
-    d.appendChild(exportBar(D));
-    d.appendChild(metaBlock(D));
-    const wrap = document.createElement("div");
-    wrap.className = "rwrap";
-    const tb_ = document.createElement("table");
-    tb_.className = "rt";
-    const th = document.createElement("thead");
-    th.innerHTML = `<tr><th>#</th><th class="l">${esc(t("thMotor"))}</th><th>${esc(t("thCur"))}</th><th>${esc(t("thPow"))}</th></tr>`;
-    const tb = document.createElement("tbody");
-    D.rows.forEach(r => {
-      const tr = document.createElement("tr");
-      [[r.i,""],[r.name,"l"],[fmtN(r.a),""],[fmtN(r.kw),""]].forEach(([v,c]) => {
-        const td = document.createElement("td"); td.className = c; td.textContent = v; tr.appendChild(td);
-      });
-      tb.appendChild(tr);
-    });
-    if (!D.rows.length){
-      const tr = document.createElement("tr");
-      tr.innerHTML = `<td colspan="4">${esc(t("noMotors"))}</td>`;
-      tb.appendChild(tr);
-    }
-    const tf = document.createElement("tfoot");
-    const fr = document.createElement("tr");
-    [[D.total.count,""],[t("totalMotors"),"l"],[D.total.a,""],[D.total.kw,""]].forEach(([v,c]) => {
-      const td = document.createElement("td"); td.className = c; td.textContent = v; fr.appendChild(td);
-    });
-    tf.appendChild(fr);
-    tb_.append(th, tb, tf);
-    wrap.appendChild(tb_);
-    d.appendChild(wrap);
-    const note = document.createElement("div");
-    note.className = "rnote";
-    note.textContent = t("motorsNote");
-    d.appendChild(note);
-  }
-
-  function viewEquip(d, D){
-    d.appendChild(exportBar(D));
-    d.appendChild(metaBlock(D));
-    if (!D.motors.length){
-      const e = document.createElement("div");
-      e.className = "empty"; e.style.gridColumn = "auto"; e.textContent = t("noMotors");
-      d.appendChild(e);
-    }
-    D.motors.forEach(m => {
-      const box = document.createElement("div");
-      box.className = "rmotor";
-      const hh = document.createElement("h4");
-      hh.textContent = "⚙️ " + m.name;
-      const sm = document.createElement("small"); sm.textContent = t("nEquip", m.equip.length);
-      hh.appendChild(sm);
-      const body = document.createElement("div");
-      body.className = "body";
-      if (!m.equip.length){
-        const n = document.createElement("div"); n.className = "none"; n.textContent = t("noEquipReg");
-        body.appendChild(n);
-      }
-      m.equip.forEach(q => {
-        const det = document.createElement("details");
-        det.className = "req";
-        const su = document.createElement("summary");
-        su.textContent = "🧰 " + q.name;
-        const s2 = document.createElement("small");
-        s2.textContent = t("specsPhotos", q.specs.length, q.photos.length);
-        su.appendChild(s2);
-        det.appendChild(su);
-        const inn = document.createElement("div");
-        inn.className = "in";
-        if (q.desc){
-          const dv = document.createElement("div"); dv.className = "descv"; dv.textContent = q.desc;
-          inn.appendChild(dv);
-        }
-        if (q.specs.length){
-          const w = document.createElement("div"); w.className = "rwrap";
-          const t_ = document.createElement("table"); t_.className = "rt";
-          t_.innerHTML = `<thead><tr><th class="l">${esc(t("thParam"))}</th><th class="l">${esc(t("thValue"))}</th></tr></thead>`;
-          const tb = document.createElement("tbody");
-          q.specs.forEach(([k,v]) => {
-            const tr = document.createElement("tr");
-            [k,v].forEach(x => { const td = document.createElement("td"); td.className = "l"; td.textContent = x; tr.appendChild(td); });
-            tb.appendChild(tr);
-          });
-          t_.appendChild(tb); w.appendChild(t_); inn.appendChild(w);
-        }
-        const g = document.createElement("div");
-        g.className = "fgrid";
-        q.photos.forEach(f => {
-          const it = document.createElement("div"); it.className = "fitem";
-          const thb = document.createElement("div"); thb.className = "thumb";
-          const im = document.createElement("img"); thb.appendChild(im);
-          dbGet(f.id).then(b => { if (b){ const u = URL.createObjectURL(b); im.src = u; it.onclick = () => openLightbox(u); } });
-          it.appendChild(thb); g.appendChild(it);
-        });
-        if (!q.photos.length){
-          const e = document.createElement("div"); e.className = "nofile"; e.textContent = t("noPhotos");
-          g.appendChild(e);
-        }
-        inn.appendChild(g);
-        det.appendChild(inn);
-        body.appendChild(det);
-      });
-      box.append(hh, body);
-      d.appendChild(box);
-    });
-  }
-
-  /* ---------- download + image helpers ---------- */
-  function dl(blob, name){
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = name;
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 30000);
-  }
-  async function thumb(id, max){            // → {blob, w, h} (JPEG)
-    const b = await dbGet(id);
-    if (!b) return null;
-    const u = URL.createObjectURL(b);
-    const img = await new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = u; });
-    if (!img){ URL.revokeObjectURL(u); return null; }
-    const r = Math.min(1, max / Math.max(img.width, img.height));
-    const c = document.createElement("canvas");
-    c.width = Math.max(1, Math.round(img.width*r)); c.height = Math.max(1, Math.round(img.height*r));
-    const x = c.getContext("2d");
-    x.fillStyle = "#fff"; x.fillRect(0,0,c.width,c.height);
-    x.drawImage(img, 0, 0, c.width, c.height);
-    URL.revokeObjectURL(u);
-    const blob = await new Promise(res => c.toBlob(res, "image/jpeg", 0.82));
-    return {blob, w:c.width, h:c.height};
-  }
-
-  /* ---------- minimal ZIP writer (no compression) for xlsx / docx ---------- */
-  const CRC = (() => { const tt = new Uint32Array(256); for (let n=0;n<256;n++){ let c=n; for (let k=0;k<8;k++) c = c&1 ? 0xEDB88320^(c>>>1) : c>>>1; tt[n]=c>>>0; } return tt; })();
-  const crc32 = u => { let c = 0xFFFFFFFF; for (let i=0;i<u.length;i++) c = CRC[(c^u[i])&255]^(c>>>8); return (c^0xFFFFFFFF)>>>0; };
-  function makeZip(files, mime){
-    const enc = new TextEncoder(), parts = [], cen = [];
-    const u16 = n => [n&255,(n>>8)&255], u32 = n => [n&255,(n>>8)&255,(n>>16)&255,(n>>>24)&255];
-    let off = 0;
-    files.forEach(f => {
-      const nm = enc.encode(f.name), d = typeof f.data === "string" ? enc.encode(f.data) : f.data, c = crc32(d);
-      const lh = new Uint8Array([0x50,0x4b,3,4, ...u16(20), ...u16(0x0800), ...u16(0), ...u16(0), ...u16(0x21),
-        ...u32(c), ...u32(d.length), ...u32(d.length), ...u16(nm.length), ...u16(0)]);
-      parts.push(lh, nm, d);
-      cen.push(new Uint8Array([0x50,0x4b,1,2, ...u16(20), ...u16(20), ...u16(0x0800), ...u16(0), ...u16(0), ...u16(0x21),
-        ...u32(c), ...u32(d.length), ...u32(d.length), ...u16(nm.length), ...u16(0), ...u16(0), ...u16(0), ...u16(0),
-        ...u32(0), ...u32(off)]), nm);
-      off += lh.length + nm.length + d.length;
-    });
-    let cs = 0; cen.forEach(p => cs += p.length);
-    const end = new Uint8Array([0x50,0x4b,5,6, ...u16(0), ...u16(0), ...u16(files.length), ...u16(files.length),
-      ...u32(cs), ...u32(off), ...u16(0)]);
-    return new Blob([...parts, ...cen, end], {type:mime});
-  }
-  const XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
-
-  /* ---------- Excel (.xlsx) ---------- */
-  function xlsxBlob(D){
-    const L = "ABCDEFGHIJ", out = [], merges = [];
-    let r = 1, widths, ncol;
-    const cell = (c, v, s) => typeof v === "number"
-      ? `<c r="${L[c]}${r}" s="${s}"><v>${v}</v></c>`
-      : `<c r="${L[c]}${r}" s="${s}" t="inlineStr"><is><t xml:space="preserve">${esc(v)}</t></is></c>`;
-    const row = (cells, ht) => { out.push(`<row r="${r}"${ht ? ` ht="${ht}" customHeight="1"` : ""}>${cells.map((x,i) => cell(i, x[0], x[1])).join("")}</row>`); r++; };
-    const merge = () => merges.push(`A${r-1}:${L[ncol-1]}${r-1}`);
-    const blank = n => Array.from({length:n}, () => ["",1]);
-
-    if (D.kind === "motors"){
-      ncol = 4; widths = [7,36,18,18];
-      row([[D.title,1], ...blank(3)], 28); merge();
-      row([[D.sub + "  ·  " + D.date,7], ...blank(3).map(() => ["",7])]); merge();
-      r++;
-      row([["#",2],[t("thMotor"),2],[t("thCur"),2],[t("thPow"),2]], 22);
-      D.rows.forEach(x => row([[x.i,9],[x.name,3], x.a==null ? ["—",9] : [x.a,4], x.kw==null ? ["—",9] : [x.kw,4]]));
-      row([[D.total.count,10],[t("totalMotors"),5],[D.total.a,6],[D.total.kw,6]], 22);
-    } else {
-      ncol = 5; widths = [16,24,28,36,14];
-      row([[D.title,1], ...blank(4)], 28); merge();
-      row([[D.sub + "  ·  " + D.date,7], ...blank(4).map(() => ["",7])]); merge();
-      r++;
-      row([[t("thMotor"),2],[t("tEquip"),2],[t("thParam"),2],[t("thValue"),2],[t("xPhotos"),2]], 22);
-      D.motors.forEach(m => {
-        row([[m.name,8], ...Array.from({length:4}, () => ["",8])], 20); merge();
-        if (!m.equip.length) row([["",3],[t("noEquipReg"),3],["",3],["",3],["",3]]);
-        m.equip.forEach(q => {
-          const lines = [];
-          if (q.desc) lines.push([t("desc"), q.desc]);
-          q.specs.forEach(s => lines.push(s));
-          if (!lines.length) lines.push(["—","—"]);
-          lines.forEach((ln,i) => row([["",3],[i===0 ? q.name : "",3],[ln[0],3],[ln[1],3],[i===0 ? q.photos.length : "", i===0 ? 9 : 3]]));
-        });
-      });
-    }
-    const sheet = XML + `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><sheetViews><sheetView${isRTL() ? ' rightToLeft="1"' : ""} showGridLines="0" workbookViewId="0"/></sheetViews><cols>${widths.map((w,i) => `<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join("")}</cols><sheetData>${out.join("")}</sheetData><mergeCells count="${merges.length}">${merges.map(m => `<mergeCell ref="${m}"/>`).join("")}</mergeCells><pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/><pageSetup paperSize="9" orientation="portrait" fitToWidth="1" fitToHeight="0"/></worksheet>`;
-    const bd = '<border><left style="thin"><color rgb="FFB9C8EA"/></left><right style="thin"><color rgb="FFB9C8EA"/></right><top style="thin"><color rgb="FFB9C8EA"/></top><bottom style="thin"><color rgb="FFB9C8EA"/></bottom><diagonal/></border>';
-    const fill = c => `<fill><patternFill patternType="solid"><fgColor rgb="FF${c}"/><bgColor indexed="64"/></patternFill></fill>`;
-    const styles = XML + `<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-<numFmts count="1"><numFmt numFmtId="164" formatCode="0.00"/></numFmts>
-<fonts count="5"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="16"/><color rgb="FF1F3A7A"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font><font><i/><sz val="10"/><color rgb="FF6D7FA6"/><name val="Calibri"/></font></fonts>
-<fills count="4"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>${fill("4A80E8")}${fill("E8EEFB")}</fills>
-<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border>${bd}</borders>
-<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
-<cellXfs count="11">
-<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
-<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"><alignment vertical="center"/></xf>
-<xf numFmtId="0" fontId="2" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
-<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>
-<xf numFmtId="164" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="top"/></xf>
-<xf numFmtId="0" fontId="3" fillId="3" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>
-<xf numFmtId="164" fontId="3" fillId="3" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
-<xf numFmtId="0" fontId="4" fillId="0" borderId="0" xfId="0" applyFont="1"/>
-<xf numFmtId="0" fontId="3" fillId="3" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>
-<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="top"/></xf>
-<xf numFmtId="1" fontId="3" fillId="3" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
-</cellXfs></styleSheet>`;
-    return makeZip([
-      {name:"[Content_Types].xml", data: XML + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'},
-      {name:"_rels/.rels", data: XML + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'},
-      {name:"xl/workbook.xml", data: XML + '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Report" sheetId="1" r:id="rId1"/></sheets></workbook>'},
-      {name:"xl/_rels/workbook.xml.rels", data: XML + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'},
-      {name:"xl/styles.xml", data: styles},
-      {name:"xl/worksheets/sheet1.xml", data: sheet},
-    ], "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-  }
-
-  /* ---------- Word (.docx) with embedded photos ---------- */
-  async function docxBlob(D){
-    const rtl = isRTL();
-    const media = [], rels = [];
-    let imgN = 0;
-    const run = (txt, o={}) => `<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="${rtl ? "Tahoma" : "Calibri"}"/>${o.b?"<w:b/>":""}${o.b&&rtl?"<w:bCs/>":""}${o.i?"<w:i/>":""}${o.i&&rtl?"<w:iCs/>":""}${o.color?`<w:color w:val="${o.color}"/>`:""}<w:sz w:val="${o.sz||20}"/>${rtl?`<w:szCs w:val="${o.sz||20}"/><w:rtl/>`:""}</w:rPr><w:t xml:space="preserve">${esc(txt)}</w:t></w:r>`;
-    const para = (inner, o={}) => `<w:p><w:pPr>${o.keep?"<w:keepNext/>":""}${o.fill?`<w:shd w:val="clear" w:color="auto" w:fill="${o.fill}"/>`:""}${rtl?"<w:bidi/>":""}<w:spacing w:before="${o.before||0}" w:after="${o.after==null?60:o.after}"/>${o.jc?`<w:jc w:val="${o.jc}"/>`:""}</w:pPr>${inner}</w:p>`;
-    const tc = (txt, w, o={}) => `<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>${o.fill?`<w:shd w:val="clear" w:color="auto" w:fill="${o.fill}"/>`:""}<w:vAlign w:val="center"/></w:tcPr>${para(run(txt,{b:o.b,color:o.color,sz:o.sz}),{jc:o.jc,after:0})}</w:tc>`;
-    const tr = (cells, head) => `<w:tr><w:trPr><w:cantSplit/>${head?"<w:tblHeader/>":""}</w:trPr>${cells}</w:tr>`;
-    const bdr = ["top","left","bottom","right","insideH","insideV"].map(s => `<w:${s} w:val="single" w:sz="4" w:space="0" w:color="B9C8EA"/>`).join("");
-    const tbl = (widths, rows) => `<w:tbl><w:tblPr>${rtl?"<w:bidiVisual/>":""}<w:tblW w:w="${widths.reduce((a,b)=>a+b,0)}" w:type="dxa"/><w:tblBorders>${bdr}</w:tblBorders><w:tblLayout w:type="fixed"/><w:tblCellMar><w:top w:w="60" w:type="dxa"/><w:left w:w="100" w:type="dxa"/><w:bottom w:w="60" w:type="dxa"/><w:right w:w="100" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>${widths.map(w => `<w:gridCol w:w="${w}"/>`).join("")}</w:tblGrid>${rows}</w:tbl>`;
-    const drawing = (n, cx, cy) => `<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${n}" name="Picture ${n}"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${n}" name="image${n}.jpg"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId${n}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`;
-
-    const body = [];
-    body.push(para(run(D.title,{b:1,sz:36,color:"1F3A7A"}), {after:40}));
-    body.push(para(run(D.sub + "  ·  " + D.date,{sz:18,color:"6D7FA6"}), {after:200}));
-
-    if (D.kind === "motors"){
-      const wd = [700,4806,2200,2200];
-      let rows = tr(["#",t("thMotor"),t("thCur"),t("thPow")].map((hd_,i) => tc(hd_, wd[i], {b:1,color:"FFFFFF",fill:"4A80E8",jc:"center"})).join(""), true);
-      D.rows.forEach((x,i) => {
-        const f = i%2 ? "F5F8FE" : null;
-        rows += tr(tc(String(x.i),wd[0],{jc:"center",fill:f}) + tc(x.name,wd[1],{fill:f}) + tc(fmtN(x.a),wd[2],{jc:"center",fill:f}) + tc(fmtN(x.kw),wd[3],{jc:"center",fill:f}));
-      });
-      rows += tr(tc(String(D.total.count),wd[0],{b:1,jc:"center",fill:"E8EEFB"}) + tc(t("totalMotors"),wd[1],{b:1,fill:"E8EEFB"}) + tc(String(D.total.a),wd[2],{b:1,jc:"center",fill:"E8EEFB"}) + tc(String(D.total.kw),wd[3],{b:1,jc:"center",fill:"E8EEFB"}));
-      body.push(tbl(wd, rows), para(""));
-    } else {
-      const wd = [3400,6506];
-      for (const m of D.motors){
-        body.push(para(run("  ⚙  " + m.name,{b:1,sz:24,color:"FFFFFF"}), {fill:"1F3A7A", before:240, after:100, keep:1}));
-        if (!m.equip.length) body.push(para(run(t("noEquipReg"),{i:1,color:"8A97B5"})));
-        for (const q of m.equip){
-          body.push(para(run("🧰 " + q.name,{b:1,sz:22,color:"4A80E8"}), {before:120, after:60, keep:1}));
-          if (q.desc) body.push(para(run(q.desc,{i:1,sz:19,color:"444444"})));
-          if (q.specs.length){
-            let rows = tr(tc(t("thParam"),wd[0],{b:1,color:"FFFFFF",fill:"4A80E8"}) + tc(t("thValue"),wd[1],{b:1,color:"FFFFFF",fill:"4A80E8"}), true);
-            q.specs.forEach(([k,v],i) => { const f = i%2 ? "F5F8FE" : null; rows += tr(tc(k,wd[0],{fill:f}) + tc(v,wd[1],{fill:f})); });
-            body.push(tbl(wd, rows), para("", {after:60}));
-          }
-          let runs = "";
-          for (const f of q.photos){
-            const th_ = await thumb(f.id, 700);
-            if (!th_) continue;
-            imgN++;
-            media.push({name:`word/media/image${imgN}.jpg`, data:new Uint8Array(await th_.blob.arrayBuffer())});
-            rels.push(`<Relationship Id="rId${imgN}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image${imgN}.jpg"/>`);
-            const k = Math.min(1872000/th_.w, 1872000/th_.h);
-            runs += drawing(imgN, Math.round(th_.w*k), Math.round(th_.h*k)) + '<w:r><w:t xml:space="preserve">  </w:t></w:r>';
-          }
-          if (runs) body.push(para(runs, {after:120}));
-        }
-      }
-    }
-    const doc = XML + `<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><w:body>${body.join("")}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1000" w:right="1000" w:bottom="1000" w:left="1000" w:header="500" w:footer="500" w:gutter="0"/></w:sectPr></w:body></w:document>`;
-    return makeZip([
-      {name:"[Content_Types].xml", data: XML + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="jpg" ContentType="image/jpeg"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>'},
-      {name:"_rels/.rels", data: XML + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>'},
-      {name:"word/_rels/document.xml.rels", data: XML + `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${rels.join("")}</Relationships>`},
-      {name:"word/document.xml", data: doc},
-      ...media,
-    ], "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-  }
-
-  /* ---------- PDF: opens the print dialog (choose "Save as PDF") ---------- */
-  async function exportPDF(D){
-    const imgs = {};
-    if (D.kind === "equip"){
-      for (const m of D.motors) for (const q of m.equip) for (const f of q.photos){
-        const th_ = await thumb(f.id, 900);
-        if (th_) imgs[f.id] = await toDataURL(th_.blob);
-      }
-    }
-    const css = `@page{size:A4;margin:14mm}*{box-sizing:border-box}
-body{font-family:"Segoe UI",Tahoma,Roboto,Arial,sans-serif;color:#1f3a7a;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.hd{background:#1f3a7a;color:#fff;padding:14px 18px;border-radius:8px;margin-bottom:14px}
-.hd h1{font-size:20px;margin:0}.hd p{margin:5px 0 0;font-size:11px;opacity:.85}
-table{width:100%;border-collapse:collapse;font-size:12px}
-th{background:#4a80e8;color:#fff;padding:8px;border:1px solid #b9c8ea}
-td{padding:7px 8px;border:1px solid #b9c8ea}
-tbody tr:nth-child(even){background:#f5f8fe}
-.c{text-align:center}
-tfoot td{background:#e8eefb;font-weight:bold;border-top:2px solid #4a80e8}
-.m{background:#1f3a7a;color:#fff;padding:9px 12px;border-radius:6px;font-weight:bold;font-size:14px;margin:18px 0 8px;break-after:avoid}
-.q{margin:0 0 12px;break-inside:avoid}
-.q h3{font-size:13px;color:#4a80e8;margin:0 0 5px}
-.q p{font-size:11px;color:#444;font-style:italic;margin:0 0 5px}
-.ph img{height:70px;width:auto;margin:6px 6px 0 0;border:1px solid #ccd6ee;border-radius:3px}
-.no{color:#8a97b5;font-size:12px;font-style:italic}`;
-    let html = `<div class="hd"><h1>${esc(D.title)}</h1><p>${esc(D.sub)} · ${esc(D.date)}</p></div>`;
-    if (D.kind === "motors"){
-      html += `<table><thead><tr><th>#</th><th style="text-align:start">${esc(t("thMotor"))}</th><th>${esc(t("thCur"))}</th><th>${esc(t("thPow"))}</th></tr></thead><tbody>` +
-        D.rows.map(r => `<tr><td class="c">${r.i}</td><td>${esc(r.name)}</td><td class="c">${fmtN(r.a)}</td><td class="c">${fmtN(r.kw)}</td></tr>`).join("") +
-        `</tbody><tfoot><tr><td class="c">${D.total.count}</td><td>${esc(t("totalMotors"))}</td><td class="c">${D.total.a}</td><td class="c">${D.total.kw}</td></tr></tfoot></table>`;
-    } else {
-      D.motors.forEach(m => {
-        html += `<div class="m">⚙ ${esc(m.name)}</div>`;
-        if (!m.equip.length) html += `<div class="no">${esc(t("noEquipReg"))}</div>`;
-        m.equip.forEach(q => {
-          html += `<div class="q"><h3>${esc(q.name)}</h3>${q.desc ? `<p>${esc(q.desc)}</p>` : ""}`;
-          if (q.specs.length) html += `<table><thead><tr><th style="text-align:start;width:38%">${esc(t("thParam"))}</th><th style="text-align:start">${esc(t("thValue"))}</th></tr></thead><tbody>` +
-            q.specs.map(([k,v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join("") + `</tbody></table>`;
-          const ph = q.photos.filter(f => imgs[f.id]).map(f => `<img src="${imgs[f.id]}">`).join("");
-          if (ph) html += `<div class="ph">${ph}</div>`;
-          html += `</div>`;
-        });
-      });
-    }
-    const fr = document.createElement("iframe");
-    fr.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0";
-    document.body.appendChild(fr);
-    const doc = fr.contentWindow.document;
-    doc.open();
-    doc.write(`<!DOCTYPE html><html dir="${isRTL() ? "rtl" : "ltr"}" lang="${LANG}"><head><meta charset="utf-8"><title>${esc(D.base)}</title><style>${css}</style></head><body>${html}</body></html>`);
-    doc.close();
-    await Promise.all([...doc.images].map(i => i.complete ? 1 : new Promise(r => { i.onload = i.onerror = r; })));
-    fr.contentWindow.focus();
-    fr.contentWindow.print();
-    setTimeout(() => fr.remove(), 120000);
-  }
-
-  /* ===== Admin actions ===== */
-  function addItem(list, lvl){
-    if (!admin) return;
-    const name = (prompt(t("newName", lvl.toLowerCase())) || "").trim();
-    if (!name) return;
-    if (list.some(n => n.name.toLowerCase() === name.toLowerCase())) { alert(t("exists")); return; }
-    list.push({id: uid(), name, children: []});
-    saveTree(); render();
-  }
-  function renameItem(n){
-    const name = (prompt(t("renamePrompt"), n.name) || "").trim();
-    if (!name) return;
-    n.name = name; saveTree(); render();
-  }
-  function removeItem(n){
-    if (!confirm(t("delItem", n.name))) return;
-    const {list} = walk();
-    const i = list.indexOf(n);
-    if (i > -1) list.splice(i,1);
-    dropAll(n);
-    saveTree(); saveDeleted(); render();
-  }
-  function dropAll(n){
-    del("img_" + n.id);
-    del("img_zh_" + n.id);
-    if (!deleted.includes(n.id)) deleted.push(n.id);
-    allFiles(n).forEach(f => dbDel(f.id));
-    n.children.forEach(dropAll);
-  }
-
-  /* ----- copy a whole folder (sub-items, specs, equipment, photos and files) ----- */
-  async function reId(n){
-    const old = n.id;
-    n.id = uid();
-    ["img_", "img_zh_"].forEach(p => { const v = load(p + old); if (v) save(p + n.id, v); });
-    ["zones", "zh"].forEach(k => {
-      if (texts[k] && texts[k][old]) texts[k][n.id] = JSON.parse(JSON.stringify(texts[k][old]));
-    });
-    const dup = async f => {
-      const b = await dbGet(f.id), id = uid();
-      if (b) await dbPut(id, b);
-      return {...f, id};
-    };
-    const dups = async arr => { const o = []; for (const f of (arr || [])) o.push(await dup(f)); return o; };
-    if (n.plate) n.plate = await dup(n.plate);
-    if (n.specFiles) n.specFiles = await dups(n.specFiles);
-    if (n.drawFiles) n.drawFiles = await dups(n.drawFiles);
-    for (const q of (n.equip || [])){
-      q.id = uid();
-      q.photos = await dups(q.photos);
-      q.files = await dups(q.files);
-    }
-    for (const k of (n.children || [])) await reId(k);
-  }
-  async function copyItem(list, n){
-    if (!admin) return;
-    toast(t("copying"), 0);
-    let name = n.name + t("copySuffix"), i = 2;
-    while (list.some(x => x.name.toLowerCase() === name.toLowerCase())) name = n.name + t("copySuffix") + " " + i++;
-    try{
-      const c = JSON.parse(JSON.stringify(n));
-      await reId(c);
-      c.name = name;
-      list.splice(list.indexOf(n) + 1, 0, c);
-      saveTree(); saveTexts();
-      toast(t("copied"), 2500);
-      render();
-    }catch(e){
-      console.error(e);
-      toast(t("saveFail"), 4000);
-    }
-  }
-
-  /* ===== Card, zone and banner photos (admin only) ===== */
-  const fileInput = $("file");
-  function pick(key){
-    if (!admin) return;
-    target = key; fileInput.value = ""; fileInput.click();
-  }
-  $("heroBtn").onclick = () => pick("hero");
-  fileInput.addEventListener("change", () => {
-    const f = fileInput.files[0];
-    if (!admin || !f || !target) return;
-    const tg = target, isHero = tg === "hero", isZh = tg.startsWith("zh_");
-    const isZone = !isHero && !isZh && tree.some(z => z.id === tg);
-    resize(f, (isHero || isZh) ? 900 : isZone ? 640 : 256, isHero || isZh || isZone)
-      .then(data => { if (save("img_" + tg, data)) render(); });
-  });
-  function resize(file, size, keepRatio){
-    return new Promise(res => {
-      const img = new Image();
-      img.onload = () => {
-        const c = document.createElement("canvas"), ctx = c.getContext("2d");
-        if (keepRatio){
-          const r = Math.min(1, size / img.width);
-          c.width = img.width * r; c.height = img.height * r;
-          ctx.drawImage(img, 0, 0, c.width, c.height);
-        } else {
-          const s = Math.min(img.width, img.height);
-          c.width = c.height = size;
-          ctx.drawImage(img, (img.width-s)/2, (img.height-s)/2, s, s, 0, 0, size, size);
-        }
-        URL.revokeObjectURL(img.src);
-        res(c.toDataURL("image/jpeg", 0.85));
-      };
-      img.src = URL.createObjectURL(file);
-    });
-  }
-
-  /* ===== Export / Import / Reset (admin only) ===== */
-  const toDataURL = b => new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(b); });
-  /* settings file: default theme + edited texts. Upload it as "config.json" next to the app:
-     everybody who opens the app online gets it automatically. */
-  function exportCfg(){
-    const c = {v:1, theme: load("themedefault") || null, texts};
-    dl(new Blob([JSON.stringify(c, null, 1)], {type:"application/json"}), "config.json");
-  }
-  async function doExport(){
-    const imgs = {};
-    for (let i = 0; i < localStorage.length; i++){
-      const k = localStorage.key(i);
-      if (k.startsWith("img_")) imgs[k] = localStorage.getItem(k);
-    }
-    const files = {};
-    for (const k of await dbKeys()) files[k] = await toDataURL(await dbGet(k));
-    const blob = new Blob([JSON.stringify({tree, deleted, imgs, files, users, texts})], {type:"application/json"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "workshop-data.json";
-    a.click();
-  }
-  $("imp").addEventListener("change", e => {
-    const f = e.target.files[0];
-    if (!f || !me || !me.owner) return;
-    const r = new FileReader();
-    r.onload = async () => {
-      try {
-        const d = JSON.parse(r.result);
-        if (!Array.isArray(d.tree)) throw 0;
-        tree = d.tree;
-        deleted = Array.isArray(d.deleted) ? d.deleted : [];
-        if (Array.isArray(d.users)){ users = d.users; saveUsers(); }
-        if (d.texts && typeof d.texts === "object"){ texts = d.texts; saveTexts(); }
-        merge(tree, seed());
-        saveTree(); saveDeleted();
-        Object.entries(d.imgs || {}).forEach(([k,v]) => save(k, v));
-        for (const [k,v] of Object.entries(d.files || {})) await dbPut(k, await (await fetch(v)).blob());
-        path = []; eqOpen = null; rep = null; render(); alert(t("imported"));
-      } catch(err){ alert(t("invalid")); }
-    };
-    r.readAsText(f);
-    e.target.value = "";
-  });
-  async function doReset(){
-    if (!confirm(t("resetQ"))) return;
-    Object.keys(localStorage).filter(k => k.startsWith("img_")).forEach(del);
-    await dbClear();
-    deleted = []; tree = seed();
-    saveTree(); saveDeleted(); path = []; eqOpen = null; rep = null; render();
-  }
-
-  /* ===== Search (inside a zone / room / panel) ===== */
-  $("q").addEventListener("input", e => {
-    const v = e.target.value.trim().toLowerCase();
-    $("grid").querySelectorAll(".card:not(.add):not(.rep)").forEach(c =>
-      c.classList.toggle("hidden", !c.dataset.name.includes(v)));
-  });
-
-  /* ===== Phone back button ===== */
-  history.replaceState({p:[], e:null, r:null}, "");
-  window.addEventListener("popstate", e => {
-    closeMenu();
-    if ($("lb").style.display === "grid") closeLightbox();
-    path = (e.state && e.state.p) ? [...e.state.p] : [];
-    eqOpen = (e.state && e.state.e) || null;
-    rep = (e.state && e.state.r) || null;
-    render();
-  });
-
-  applyTheme();
-  applyLang();
-  render();
-  pullRemote();
-  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
-</script>
-</body>
-</html>
+    d.append(top, hero, sum,
