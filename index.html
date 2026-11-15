@@ -247,6 +247,8 @@
   .mi.red{background:#fde3e3;color:#b3302c}
   .mi.out{background:#fff3d1;color:#7a5b00}
   .mi.login{background:var(--blue);color:#fff;font-weight:bold;box-shadow:0 5px 12px rgba(74,128,232,.4)}
+  .mi.info{display:block;font-size:12px;line-height:1.9;white-space:pre-line;background:var(--tint)}
+  .mi.info.warnc{background:#fde3e3;color:#b3302c}
   .langlab{font-size:12px;color:#8a97b5;margin-bottom:6px}
   .langrow{display:flex;gap:8px;margin-bottom:18px}
   .lg{flex:1;text-align:center;padding:11px 6px;border-radius:12px;background:var(--tint2);color:var(--dark);
@@ -332,10 +334,13 @@
   .thumb{aspect-ratio:1;border-radius:14px;background:var(--tint);display:grid;place-items:center;font-size:34px;overflow:hidden}
   .thumb img{width:100%;height:100%;object-fit:cover}
   .fname{margin-top:5px;font-size:10.5px;color:#6d7fa6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fcap{margin-top:5px;font-size:10.5px;color:#6d7fa6;line-height:1.4;word-break:break-word}
   .fsize{font-size:10px;color:#9aa7c4;direction:ltr;margin-top:1px}
   .fdel{position:absolute;top:4px;left:4px;width:24px;height:24px;border-radius:50%;background:#fde3e3;
     display:none;place-items:center;font-size:12px}
   body.admin .fdel{display:grid}
+  .fdl{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;background:#e4edff;
+    display:grid;place-items:center;font-size:12px;z-index:2}
   .ftile{aspect-ratio:1;border:2px dashed var(--blue);border-radius:14px;color:var(--blue);
     display:none;place-items:center;font-size:30px;cursor:pointer}
   body.admin .ftile{display:grid}
@@ -382,6 +387,8 @@
   table.rt th.l,table.rt td.l{text-align:left}
   table.rt tbody tr:nth-child(even){background:var(--tint2)}
   table.rt tfoot td{background:#e8eefb;font-weight:bold;border-top:2px solid var(--blue);border-bottom:0}
+  table.rt.wide th,table.rt.wide td{white-space:nowrap;padding:9px 10px}
+  table.rt tr.grp td{background:var(--dark);color:#fff;text-align:start;font-weight:bold;border-bottom:0}
   .rnote{font-size:11px;color:#8a97b5;margin-top:10px;line-height:1.6}
   .rmotor{margin-bottom:18px}
   .rmotor>h4{background:var(--dark);color:#fff;padding:12px 14px;border-radius:12px 12px 0 0;font-size:14px;
@@ -402,9 +409,11 @@
     padding:14px;overflow:hidden}
   #lb img{max-width:100%;max-height:100%;border-radius:6px}
   #lbImg{touch-action:none;user-select:none;-webkit-user-drag:none;transform-origin:center}
-  #lbClose{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));right:14px;width:44px;height:44px;
+  #lbClose,#lbDl{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));width:44px;height:44px;
     border-radius:50%;background:rgba(255,255,255,.22);color:#fff;display:grid;place-items:center;
     font-size:20px;cursor:pointer;z-index:2}
+  #lbClose{right:14px}
+  #lbDl{left:14px}
 
   /* OCR result dialog + toast */
   #mod{position:fixed;inset:0;background:rgba(15,30,70,.55);display:none;place-items:center;z-index:60;padding:20px}
@@ -440,6 +449,7 @@
   html[dir=rtl] .b-del{right:auto;left:42px}
   html[dir=rtl] .b-copy{left:auto;right:8px}
   html[dir=rtl] .fdel{left:auto;right:4px}
+  html[dir=rtl] .fdl{right:auto;left:4px}
   html[dir=rtl] #drawer{left:auto;right:0;transform:translateX(100%);border-radius:26px 0 0 26px;
     box-shadow:-10px 0 30px rgba(0,0,0,.2)}
   html[dir=rtl] body.menu-open #drawer{transform:none}
@@ -448,6 +458,7 @@
   html[dir=rtl] .eqrow .go{transform:scaleX(-1)}
   html[dir=rtl] #mod .row b{text-align:left}
   html[dir=rtl] #lbClose{right:auto;left:14px}
+  html[dir=rtl] #lbDl{left:auto;right:14px}
   html[dir=rtl] .mhero .mimg svg{transform:scaleX(-1)}
 </style>
 </head>
@@ -483,7 +494,7 @@
 
 <div id="ov"></div>
 <aside id="drawer"></aside>
-<div id="lb"><div id="lbClose">✕</div><img id="lbImg" alt=""></div>
+<div id="lb"><div id="lbDl">⬇️</div><div id="lbClose">✕</div><img id="lbImg" alt=""></div>
 <div id="mod"><div class="box" id="modBox"></div></div>
 <div id="toast"></div>
 <input type="file" id="file" accept="image/*" style="display:none">
@@ -506,8 +517,13 @@
   const EQ_SPECS = ["Manufacturer","Model / Serial","Rating"];
   const ACCEPT = "image/*,.pdf,application/pdf,.xls,.xlsx,.xlsm,.csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
   const ACCEPT_DOCS = ACCEPT + ",.doc,.docx,.dwg,.dxf,.txt,.zip";
-  const MAX_FILE = 40*1024*1024;
-  const isMCS = n => /^MCS/i.test(n.name);        // panels whose name starts with MCS get a "Reports" section
+  const MAX_FILE = 40*1024*1024;      // hard limit per file
+  const WARN_FILE = 15*1024*1024;     // above this size the admin is asked to confirm
+  const LS_LIMIT = 5*1024*1024;       // approximate localStorage limit of a browser
+  const isMCS = n => /^MCS/i.test(n.name);
+
+  /* which spec rows count as "power" and "current" (these two are the only columns that get totals) */
+  const POW_RE = /power|\bkw\b|توان/i, PF_RE = /factor|cos|φ|ضریب/i, CUR_RE = /current|\(a\)|amp|جریان|آمپر/i;
 
   /* ===== Themes (everyone can pick one; the admin can set the default for everybody) ===== */
   const THEMES = {
@@ -584,6 +600,7 @@
       eZH1:"Header greeting:", eZH2:"Header subtitle:",
       eEmpty:"(leave empty to restore the default)",
       copyItem:"Copy", copying:"Copying…", copied:"Copied", copySuffix:" - Copy",
+      dlTitle:"Download", dlPlate:"⬇️ Download photo", specPhotos:"Technical-spec photos",
       exportData:"📤 Export data", importData:"📥 Import data", resetData:"♻️ Reset data", logout:"🚪 Log out",
       adminPill:"Admin", heroTitle:"Electrical · Energy · Fluids", heroSub:"⚡ Electrical rooms, panels & motors",
       search:"Search...", select:"Select a {0}", addLvl:"Add {0}", newName:"New {0} name:",
@@ -610,18 +627,28 @@
       noPlate:"📷 No nameplate photo yet", uploadPlate:"📷 Upload nameplate photo",
       plateHint:"🔍 Tap the photo to view full screen and zoom", plateAlt:"Motor nameplate",
       big40:"File is larger than 40 MB", big40n:"\"{0}\" is larger than 40 MB", saveFail:"Could not save file",
+      bigWarn:"\"{0}\" is {1} MB. Big files make the app slower. Upload anyway?",
+      noSpace:"Not enough free space on this device to save this file.",
+      stgTitle:"💾 Storage", stgFiles:"Files: {0} used of {1}", stgLs:"Photos & settings: {0} of about {1}",
+      persistOn:"🔒 Protected from automatic cleaning", persistOff:"⚠️ Not protected. Tap here to request protection (installing the app helps).",
       renameBtn:"✏️ Rename", delEq:"🗑 Delete equipment", desc:"Description",
       descPh:"Notes, location, condition, maintenance info...", techSpecs:"Technical specs", photos:"Photos",
       filesTitle:"Files: PDF, drawings, manuals", eqName:"Equipment name:", delEqQ:"Delete \"{0}\" and all its files?",
       paramName:"Parameter name:", value:"Value:", delRow:"Delete this row?", addParam:"+ Add parameter",
       noFiles:"No files yet", delFileQ:"Delete \"{0}\"?", notFound:"File not found",
       reports:"Reports", rMotors:"Motors report", rEquip:"Equipment report",
-      rMotorsDesc:"Motor name, current (A), power (kW) and totals",
+      rMotorsDesc:"All parameters of every motor, grouped by panel, with total current and power at the end",
       rEquipDesc:"Every motor with its equipment, specs and photos",
+      rPhotoMotor:"Motor photos report", rPhotoMotorDesc:"Nameplate and technical-spec photos of every motor, in one file",
+      rPhotoEquip:"Equipment photos report", rPhotoEquipDesc:"All equipment photos of every motor, in one file",
+      repPhotoMotorTitle:"{0} – Motor photos report", repPhotoEquipTitle:"{0} – Equipment photos report",
+      repPrep:"Preparing the file… (many photos can take a moment)",
+      photosCount:"{0} photos", photosNote:"Only motors that have photos are listed. Tap a photo to enlarge.",
+      noPhotosAll:"No photos found here yet.", thItem:"Item",
       repMotorsTitle:"{0} – Motors report", repEquipTitle:"{0} – Equipment report",
-      thMotor:"Motor", thCur:"Current (A)", thPow:"Power (kW)", totalMotors:"Total motors",
-      noMotors:"No motors in this panel yet.",
-      motorsNote:"Values come from each motor's technical specs (“Current (A)” and “Power (kW)”). Empty values show “—” and are not counted in the totals.",
+      thMotor:"Motor", thCur:"Current (A)", thPow:"Power (kW)", totalMotors:"Total",
+      noMotors:"No motors here yet.",
+      motorsNote:"Every parameter you entered for the motors is listed. Only current (A) and power (kW) are summed in the last row. Empty values show “—” and are not counted. Scroll sideways to see all columns.",
       nEquip:"{0} equipment", noEquipReg:"No equipment registered", specsPhotos:"{0} specs · {1} photos",
       thParam:"Parameter", thValue:"Value", noPhotos:"No photos", exportFail:"Export failed", xPhotos:"Photos",
       imported:"Data imported", invalid:"Invalid file",
@@ -667,6 +694,7 @@
       eZH1:"متن خوش‌آمدگویی بالای صفحه:", eZH2:"زیرنویس بالای صفحه:",
       eEmpty:"(خالی بگذارید تا متن پیش‌فرض برگردد)",
       copyItem:"کپی", copying:"در حال کپی…", copied:"کپی شد", copySuffix:" - کپی",
+      dlTitle:"دانلود", dlPlate:"⬇️ دانلود عکس", specPhotos:"عکس‌های مشخصات فنی",
       exportData:"📤 خروجی گرفتن از اطلاعات", importData:"📥 وارد کردن اطلاعات", resetData:"♻️ بازنشانی اطلاعات",
       logout:"🚪 خروج از حساب",
       adminPill:"مدیر", heroTitle:"برق · انرژی · سیالات", heroSub:"⚡ اتاق‌های برق، تابلوها و موتورها",
@@ -694,18 +722,28 @@
       noPlate:"📷 هنوز عکس پلاکی ثبت نشده", uploadPlate:"📷 بارگذاری عکس پلاک",
       plateHint:"🔍 برای نمایش تمام‌صفحه و بزرگ‌نمایی روی عکس بزنید", plateAlt:"پلاک موتور",
       big40:"حجم فایل بیشتر از ۴۰ مگابایت است", big40n:"«{0}» بزرگ‌تر از ۴۰ مگابایت است", saveFail:"ذخیرهٔ فایل ممکن نشد",
+      bigWarn:"«{0}» حجمش {1} مگابایت است. فایل‌های بزرگ برنامه را کند می‌کنند. بارگذاری شود؟",
+      noSpace:"فضای خالی این دستگاه برای ذخیرهٔ این فایل کافی نیست.",
+      stgTitle:"💾 حافظه", stgFiles:"فایل‌ها: {0} مصرف از {1}", stgLs:"عکس‌ها و تنظیمات: {0} از حدود {1}",
+      persistOn:"🔒 در برابر پاک شدن خودکار محافظت شده", persistOff:"⚠️ محافظت‌نشده. برای درخواست محافظت اینجا بزنید (نصب برنامه کمک می‌کند).",
       renameBtn:"✏️ تغییر نام", delEq:"🗑 حذف تجهیز", desc:"توضیحات",
       descPh:"یادداشت، محل نصب، وضعیت، اطلاعات تعمیرات...", techSpecs:"مشخصات فنی", photos:"عکس‌ها",
       filesTitle:"فایل‌ها: PDF، نقشه، دفترچه راهنما", eqName:"نام تجهیز:", delEqQ:"«{0}» و همهٔ فایل‌هایش حذف شود؟",
       paramName:"نام پارامتر:", value:"مقدار:", delRow:"این ردیف حذف شود؟", addParam:"+ افزودن پارامتر",
       noFiles:"فایلی نیست", delFileQ:"«{0}» حذف شود؟", notFound:"فایل پیدا نشد",
       reports:"گزارش‌ها", rMotors:"گزارش موتورها", rEquip:"گزارش تجهیزات",
-      rMotorsDesc:"نام موتور، جریان (A)، توان (kW) و جمع کل",
+      rMotorsDesc:"همهٔ پارامترهای هر موتور به تفکیک تابلو، با جمع کل جریان و توان در انتها",
       rEquipDesc:"هر موتور با تجهیزات، مشخصات و عکس‌هایش",
+      rPhotoMotor:"گزارش عکس موتورها", rPhotoMotorDesc:"عکس پلاک و مشخصات فنی همهٔ موتورها در یک فایل",
+      rPhotoEquip:"گزارش عکس تجهیزات", rPhotoEquipDesc:"عکس‌های تجهیزات همهٔ موتورها در یک فایل",
+      repPhotoMotorTitle:"{0} – گزارش عکس موتورها", repPhotoEquipTitle:"{0} – گزارش عکس تجهیزات",
+      repPrep:"در حال ساخت فایل… (با عکس‌های زیاد کمی طول می‌کشد)",
+      photosCount:"{0} عکس", photosNote:"فقط موتورهایی که عکس دارند نمایش داده می‌شوند. برای بزرگ‌نمایی روی عکس بزنید.",
+      noPhotosAll:"هنوز عکسی اینجا پیدا نشد.", thItem:"مورد",
       repMotorsTitle:"{0} – گزارش موتورها", repEquipTitle:"{0} – گزارش تجهیزات",
-      thMotor:"موتور", thCur:"جریان (A)", thPow:"توان (kW)", totalMotors:"جمع کل موتورها",
-      noMotors:"هنوز موتوری در این تابلو نیست.",
-      motorsNote:"مقادیر از مشخصات فنی هر موتور («جریان (A)» و «توان (kW)») خوانده می‌شوند. مقدار خالی با «—» نشان داده می‌شود و در جمع نمی‌آید.",
+      thMotor:"موتور", thCur:"جریان (A)", thPow:"توان (kW)", totalMotors:"جمع کل",
+      noMotors:"هنوز موتوری اینجا نیست.",
+      motorsNote:"همهٔ پارامترهایی که برای موتورها وارد کرده‌اید نمایش داده می‌شود. فقط جریان (A) و توان (kW) در ردیف آخر جمع می‌شوند. مقدار خالی با «—» نشان داده می‌شود و در جمع نمی‌آید. برای دیدن همهٔ ستون‌ها جدول را به کنار بکشید.",
       nEquip:"{0} تجهیز", noEquipReg:"تجهیزی ثبت نشده", specsPhotos:"{0} مشخصه · {1} عکس",
       thParam:"پارامتر", thValue:"مقدار", noPhotos:"عکسی نیست", exportFail:"ساخت خروجی ناموفق بود", xPhotos:"عکس",
       imported:"اطلاعات وارد شد", invalid:"فایل نامعتبر است",
@@ -777,6 +815,44 @@
   }
   merge(tree, seed());
   saveTree();
+
+  /* ===== Storage usage, permanent storage and big-file protection ===== */
+  const fmtBytes = b => b >= 1073741824 ? (b/1073741824).toFixed(1) + " GB"
+    : b >= 1048576 ? (b/1048576).toFixed(1) + " MB" : Math.max(1, Math.round(b/1024)) + " KB";
+  function lsBytes(){
+    let n = 0;
+    try{
+      for (let i = 0; i < localStorage.length; i++){
+        const k = localStorage.key(i);
+        n += (k.length + (localStorage.getItem(k) || "").length) * 2;
+      }
+    }catch(e){}
+    return n;
+  }
+  async function storageInfo(){
+    let usage = null, quota = null, persisted = null;
+    try{ if (navigator.storage && navigator.storage.estimate){ const e = await navigator.storage.estimate(); usage = e.usage; quota = e.quota; } }catch(e){}
+    try{ if (navigator.storage && navigator.storage.persisted) persisted = await navigator.storage.persisted(); }catch(e){}
+    return {usage, quota, persisted, ls: lsBytes()};
+  }
+  async function spaceOK(bytes){
+    const s = await storageInfo();
+    if (s.quota == null || s.usage == null) return true;
+    return (s.quota - s.usage) > bytes * 1.5 + 20 * 1048576;
+  }
+  /* checks size limit, asks before big files, checks free space */
+  async function okToStore(file){
+    if (file.size > MAX_FILE){ alert(t("big40n", file.name)); return false; }
+    if (file.size > WARN_FILE && !confirm(t("bigWarn", file.name, (file.size / 1048576).toFixed(1)))) return false;
+    if (!(await spaceOK(file.size))){ alert(t("noSpace")); return false; }
+    return true;
+  }
+  function askPersist(){
+    try{
+      if (navigator.storage && navigator.storage.persist && navigator.storage.persisted)
+        navigator.storage.persisted().then(p => { if (!p) navigator.storage.persist(); });
+    }catch(e){}
+  }
 
   /* ===== Editable texts (admin) + theme ===== */
   /* local edits (admin's device) win; otherwise the texts from config.json (downloaded when online) are used */
@@ -991,15 +1067,16 @@
     path = valid;
     return {node, list};
   }
-  function crumbs(){
+  function crumbArr(){
     let list = tree, names = [];
     for (const id of path){
       const f = list.find(n => n.id === id);
       if (!f) break;
       names.push(f.name); list = f.children;
     }
-    return names.join("  ›  ");
+    return names;
   }
+  function crumbs(){ return crumbArr().join("  ›  "); }
   function ensure(n){
     if (!n.specs) n.specs = DEFAULT_SPECS.map(k => ({k, v:""}));
     else if (!n.pfAdded){
@@ -1037,6 +1114,29 @@
   function closeMenu(){ document.body.classList.remove("menu-open"); }
   $("ov").onclick = closeMenu;
   $("menuBtn2").onclick = openMenu;
+
+  /* storage usage card (admin) */
+  function addStorageInfo(d){
+    const sg = document.createElement("div");
+    sg.className = "mi info";
+    sg.textContent = t("stgTitle") + " …";
+    d.appendChild(sg);
+    storageInfo().then(s => {
+      const lines = [t("stgTitle")];
+      let warn = false;
+      if (s.usage != null && s.quota != null){
+        lines.push(t("stgFiles", fmtBytes(s.usage), fmtBytes(s.quota)));
+        if (s.usage / s.quota > 0.8) warn = true;
+      }
+      lines.push(t("stgLs", fmtBytes(s.ls), fmtBytes(LS_LIMIT)));
+      if (s.ls / LS_LIMIT > 0.8) warn = true;
+      if (s.persisted === true) lines.push(t("persistOn"));
+      else if (s.persisted === false) lines.push(t("persistOff"));
+      sg.textContent = lines.join("\n");
+      sg.classList.toggle("warnc", warn);
+    });
+    sg.onclick = () => { askPersist(); setTimeout(() => { if (document.body.classList.contains("menu-open")) renderMenu(); }, 700); };
+  }
 
   function renderMenu(){
     const d = $("drawer");
@@ -1092,6 +1192,7 @@
       item(t("login"), () => { closeMenu(); login(); }, "login");
       item(t("forgot"), () => { closeMenu(); forgot(); });
     } else {
+      if (me.owner) addStorageInfo(d);
       item(t("chgPw"), async () => {
         closeMenu();
         const a = prompt(t("newPw"));
@@ -1182,7 +1283,10 @@
   }
 
   /* ===== Main render ===== */
-  const repTitle = k => t(k === "menu" ? "reports" : k === "motors" ? "rMotors" : "rEquip");
+  const REP_TITLES = {menu:"reports", motors:"rMotors", equip:"rEquip", pmotor:"rPhotoMotor", pequip:"rPhotoEquip"};
+  const repTitle = k => t(REP_TITLES[k] || "reports");
+  /* reports are available in zones, electrical rooms and panels (admin + users the admin allowed) */
+  const repAvail = (depth, node) => !!node && canReport() && depth >= 1 && depth <= 3;
 
   function render(){
     /* not allowed inside? go back to the home dashboard */
@@ -1190,10 +1294,10 @@
     const {node, list} = walk();
     const depth = path.length;
     const root = depth === 0;
-    const zoneMode = depth === 1;               // zone dashboard (photo header + motor stats)
-    const isDetail = depth >= MOTOR_DEPTH;
-    const inRep = !!rep && depth === 3 && isMCS(node) && canReport();
+    const inRep = !!rep && repAvail(depth, node);
     if (!inRep) rep = null;
+    const zoneMode = depth === 1 && !inRep;     // zone dashboard (photo header + motor stats)
+    const isDetail = depth >= MOTOR_DEPTH;
 
     let eq = null;
     if (isDetail){
@@ -1255,7 +1359,7 @@
     const grid = $("grid");
     grid.innerHTML = "";
 
-    if (depth === 3 && isMCS(node) && canReport()){
+    if (repAvail(depth, node)){
       const rc = document.createElement("div");
       rc.className = "card rep";
       rc.innerHTML = '<div class="icon">📊</div><b></b>';
@@ -1634,9 +1738,9 @@
   /* ===== Motor page (new design) ===== */
   /* [id, label key, icon, matches spec name, must NOT match, unit] */
   const KEYS = [
-    ["power",   "kPow", "⚡", /power|\bkw\b|توان/i, /factor|cos|φ|ضریب/i, "kW"],
+    ["power",   "kPow", "⚡", POW_RE, PF_RE, "kW"],
     ["voltage", "kVol", "🔌", /volt|ولتاژ/i, null, "V"],
-    ["current", "kCur", "Ⓐ",  /current|\(a\)|amp|جریان|آمپر/i, null, "A"],
+    ["current", "kCur", "Ⓐ",  CUR_RE, null, "A"],
     ["speed",   "kSpd", "🌀", /speed|rpm|دور/i, null, "RPM"],
     ["freq",    "kFrq", "〰️", /freq|hz|فرکانس/i, null, "Hz"],
     ["ip",      "kIp",  "🛡️", /\bip\b|حفاظت/i, null, ""]
@@ -1707,8 +1811,8 @@
       c1.appendChild(kt);
       d.appendChild(c1);
 
-      /* all parameters (editable) + spec files: only the admin sees and edits these */
       if (admin){
+        /* all parameters (editable) + spec files: only the admin edits these */
         const c2 = h('<div class="mcard"></div>');
         c2.appendChild(specsBlock(node.specs, t("allParams"), () => renderDetail(node)));
         d.appendChild(c2);
@@ -1716,6 +1820,14 @@
         const c3 = h('<div class="mcard"></div>');
         c3.appendChild(filesBlock(node.specFiles, t("otherSpec"), undefined, f => ocrFill(node.specs, f)));
         d.appendChild(c3);
+      } else {
+        /* everybody else can see (and download) the photos saved in the parameters section */
+        const imgs = (node.specFiles || []).filter(f => kind(f) === "img");
+        if (imgs.length){
+          const c3 = h('<div class="mcard"></div>');
+          c3.appendChild(filesBlock(imgs, t("specPhotos")));
+          d.appendChild(c3);
+        }
       }
     }
 
@@ -1760,7 +1872,7 @@
     }
   }
 
-  /* ===== Nameplate (original quality, tap to zoom) ===== */
+  /* ===== Nameplate (original quality, tap to zoom, download) ===== */
   function plateBlock(node){
     const box = document.createElement("div");
     box.className = "plate";
@@ -1776,11 +1888,14 @@
         if (!b) return;
         const u = URL.createObjectURL(b);
         im.src = u;
-        im.onclick = () => openLightbox(u);
+        im.onclick = () => openLightbox(u, dlName(node.plate));
       });
       const hint = document.createElement("div");
       hint.className = "hint"; hint.textContent = t("plateHint");
       box.append(im, hint);
+      const dlb = pbtn(t("dlPlate"), () => downloadFile(node.plate));
+      dlb.style.margin = "10px 0 0";
+      box.appendChild(dlb);
       const bar = document.createElement("div");
       bar.className = "pbtns";
       bar.append(
@@ -1805,7 +1920,7 @@
   }
   async function setPlate(node, file){
     if (!admin || !file) return;
-    if (file.size > MAX_FILE){ alert(t("big40")); return; }
+    if (!(await okToStore(file))) return;
     const id = uid();
     try { await dbPut(id, file); } catch(e){ alert(t("saveFail")); return; }   // original, no resizing
     if (node.plate) dbDel(node.plate.id);
@@ -2053,6 +2168,22 @@
   const KIND_ICON = {pdf:"📕", xls:"📗", doc:"📘", cad:"📐", file:"📄"};
   const fmtSize = b => b >= 1048576 ? (b/1048576).toFixed(1) + " MB" : Math.max(1, Math.round(b/1024)) + " KB";
 
+  /* file name used for downloads (photos are stored as JPEG, so the extension is fixed to match) */
+  function dlName(f){
+    let n = f.name || "file";
+    const ty = f.type || "";
+    if (ty.startsWith("image/")){
+      const ext = ty === "image/png" ? ".png" : ty === "image/webp" ? ".webp" : ty === "image/gif" ? ".gif" : ".jpg";
+      n = n.replace(/\.[^.]+$/, "") + ext;
+    }
+    return n;
+  }
+  async function downloadFile(f){
+    const b = await dbGet(f.id);
+    if (!b){ alert(t("notFound")); return; }
+    dl(new Blob([b], {type: f.type || b.type}), dlName(f));
+  }
+
   function filesBlock(arr, title, accept, onImg){
     const sec = section(title);
     const grid = document.createElement("div");
@@ -2074,13 +2205,16 @@
       const x = document.createElement("span");
       x.className = "fdel"; x.textContent = "🗑";
       x.onclick = e => { e.stopPropagation(); if (admin) removeFile(arr, f); };
+      const dlb = document.createElement("span");
+      dlb.className = "fdl"; dlb.textContent = "⬇️"; dlb.title = t("dlTitle");
+      dlb.onclick = e => { e.stopPropagation(); downloadFile(f); };
       it.append(th, nm);
       if (f.size){
         const sz = document.createElement("div");
         sz.className = "fsize"; sz.textContent = fmtSize(f.size);
         it.appendChild(sz);
       }
-      it.appendChild(x);
+      it.append(x, dlb);
       it.onclick = () => openFile(f);
       grid.appendChild(it);
     });
@@ -2121,7 +2255,7 @@
   async function addFiles(arr, files, onImg){
     const imgs = [];
     for (const f of files){
-      if (f.size > MAX_FILE){ alert(t("big40n", f.name)); continue; }
+      if (!(await okToStore(f))) continue;
       let blob = f, type = f.type;
       if ((f.type||"").startsWith("image/")){ blob = await imgBlob(f, 2400); type = "image/jpeg"; }
       const id = uid();
@@ -2143,26 +2277,35 @@
     if (!b){ alert(t("notFound")); return; }
     const url = URL.createObjectURL(new Blob([b], {type: f.type || b.type}));
     const k = kind(f);
-    if (k === "img"){ openLightbox(url); return; }
+    if (k === "img"){ openLightbox(url, dlName(f)); return; }
     if (k === "pdf"){ if (window.open(url, "_blank")) return; }
     const a = document.createElement("a");
-    a.href = url; a.download = f.name; a.click();
+    a.href = url; a.download = dlName(f); a.click();
   }
 
-  /* ===== Fullscreen viewer with zoom (pinch, double tap, wheel) ===== */
-  let Z = {s:1, x:0, y:0}, pts = new Map(), startDist = 1, startS = 1, lastTap = 0;
+  /* ===== Fullscreen viewer with zoom (pinch, double tap, wheel) and a download button ===== */
+  let Z = {s:1, x:0, y:0}, pts = new Map(), startDist = 1, startS = 1, lastTap = 0, lbUrl = null, lbName = "";
   const clampZ = v => Math.min(8, Math.max(1, v));
   const applyZ = () => { $("lbImg").style.transform = `translate(${Z.x}px,${Z.y}px) scale(${Z.s})`; };
-  function openLightbox(url){
+  function openLightbox(url, name){
     Z = {s:1, x:0, y:0}; pts.clear(); applyZ();
+    lbUrl = url; lbName = name || "photo.jpg";
     $("lbImg").src = url;
     $("lb").style.display = "grid";
   }
   function closeLightbox(){
     $("lb").style.display = "none";
     $("lbImg").removeAttribute("src");
+    lbUrl = null;
   }
   $("lbClose").onclick = closeLightbox;
+  $("lbDl").onclick = e => {
+    e.stopPropagation();
+    if (!lbUrl) return;
+    const a = document.createElement("a");
+    a.href = lbUrl; a.download = lbName;
+    document.body.appendChild(a); a.click(); a.remove();
+  };
   $("lb").addEventListener("click", e => { if (e.target === $("lb")) closeLightbox(); });
 
   const li = $("lbImg");
@@ -2205,34 +2348,76 @@
   }, {passive:false});
 
   /* ================================================================
-     REPORTS (MCS panels): data is read live from the stored tree
+     REPORTS: data is read live from the stored tree
      Available to the admin and to users the admin allowed.
+     Zones / rooms / panels:
+       - motors report: all parameters of every motor, grouped by panel, with total current and power
+       - photo reports (motors + equipment)
+     Panels: also the equipment report
      ================================================================ */
   const byName = (a,b) => a.name.localeCompare(b.name, undefined, {numeric:true});
   const r2 = x => Math.round(x*100)/100;
   const fmtN = v => v == null ? "—" : String(r2(v));
   const num = v => { const m = String(v||"").replace(",",".").match(/-?\d+(?:\.\d+)?/); return m ? parseFloat(m[0]) : null; };
   const findSpec = (m, re, not) => { const s = m.specs.find(x => re.test(x.k) && !(not && not.test(x.k))); return s ? s.v : ""; };
-  const motorA  = m => num(findSpec({specs: m.specs || []}, /current|\(a\)|amp|جریان|آمپر/i));
-  const motorKW = m => num(findSpec({specs: m.specs || []}, /power|\bkw\b|توان/i, /factor|cos|φ|ضریب/i));
+  const motorA  = m => num(findSpec({specs: m.specs || []}, CUR_RE));
+  const motorKW = m => num(findSpec({specs: m.specs || []}, POW_RE, PF_RE));
   const esc = s => String(s==null ? "" : s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
   const safe = s => String(s).replace(/[^\w\-]+/g, "_");
   const today = () => new Date().toISOString().slice(0,10);
   const stamp = () => isRTL() ? new Date().toLocaleString("fa-IR-u-nu-latn") : new Date().toLocaleString("en-GB");
+  const colName = i => { let s = ""; i++; while (i > 0){ const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; };
 
-  function dataMotors(panel){
-    const ms = [...panel.children].sort(byName);
-    let a = 0, kw = 0;
-    const rows = ms.map((m,i) => {
-      ensure(m);
-      const A = motorA(m), K = motorKW(m);
-      if (A != null) a += A;
-      if (K != null) kw += K;
-      return {i:i+1, name:m.name, a:A, kw:K};
+  /* motors report: one table, one column per parameter, panels as group rows, totals only for power and current */
+  function dataMotors(node){
+    const depth = path.length;
+    const panels = [];
+    const rec = (n, d, names) => {
+      if (d === 3){ panels.push({p:n, loc:names.slice(0, -1).join("  ›  ")}); return; }
+      [...(n.children || [])].sort(byName).forEach(c => rec(c, d + 1, [...names, c.name]));
+    };
+    rec(node, depth, crumbArr());
+
+    const all = [];
+    const gs = panels.map(({p, loc}) => {
+      const ms = [...(p.children || [])].sort(byName);
+      ms.forEach(m => { ensure(m); all.push(m); });
+      return {name:p.name, loc, ms};
+    }).filter(g => g.ms.length);
+
+    /* columns = every parameter that has a value in at least one motor (power and current are always kept) */
+    const seen = new Map();
+    all.forEach(m => m.specs.forEach(s => {
+      if (!seen.has(s.k)) seen.set(s.k, false);
+      if (String(s.v || "").trim()) seen.set(s.k, true);
+    }));
+    const cols = [];
+    let powDone = false, curDone = false;
+    seen.forEach((has, k) => {
+      const isPow = POW_RE.test(k) && !PF_RE.test(k), isCur = CUR_RE.test(k);
+      if (!has && !isPow && !isCur) return;
+      const c = {k, label:specLabel(k), tot:""};
+      if (isPow && !powDone){ c.tot = "kw"; powDone = true; }
+      else if (isCur && !curDone){ c.tot = "a"; curDone = true; }
+      cols.push(c);
     });
-    return {kind:"motors", title:t("repMotorsTitle", panel.name), sub:crumbs(), date:stamp(),
-            base:`${safe(panel.name)}_motors_report_${today()}`,
-            rows, total:{count:ms.length, a:r2(a), kw:r2(kw)}};
+
+    let a = 0, kw = 0, idx = 0;
+    const groups = gs.map(g => ({
+      name:g.name, loc:g.loc,
+      rows:g.ms.map(m => {
+        const A = motorA(m), K = motorKW(m);
+        if (A != null) a += A;
+        if (K != null) kw += K;
+        return {i:++idx, name:m.name, vals:cols.map(c => {
+          const s = m.specs.find(x => x.k === c.k);
+          return String((s && s.v) || "").trim() || "—";
+        })};
+      })
+    }));
+    return {kind:"motors", title:t("repMotorsTitle", node.name), sub:crumbs(), date:stamp(),
+            base:`${safe(node.name)}_motors_report_${today()}`,
+            cols, groups, total:{count:idx, a:r2(a), kw:r2(kw)}};
   }
   function dataEquip(panel){
     const ms = [...panel.children].sort(byName);
@@ -2247,6 +2432,40 @@
             })};
   }
 
+  /* all motors under a zone / room / panel (depth = path length of node) */
+  function collectMotors(node, depth){
+    const out = [];
+    const rec = (n, d, names) => {
+      if (d === MOTOR_DEPTH){ ensure(n); out.push({m:n, loc:names.slice(0, -1).join("  ›  ")}); return; }
+      [...(n.children || [])].sort(byName).forEach(c => rec(c, d + 1, [...names, c.name]));
+    };
+    rec(node, depth, crumbArr());
+    return out;
+  }
+  /* photo reports: mode "motor" = nameplate + technical-spec photos, mode "equip" = equipment photos */
+  function dataPhotos(node, mode){
+    const ms = collectMotors(node, path.length);
+    const groups = ms.map(({m, loc}) => {
+      const items = [];
+      if (mode === "motor"){
+        if (m.plate) items.push({cap:t("plateAlt"), f:m.plate});
+        (m.specFiles || []).filter(f => kind(f) === "img").forEach(f => items.push({cap:f.name, f}));
+      } else {
+        [...m.equip].sort(byName).forEach(q => {
+          ensureEq(q);
+          q.photos.forEach(f => items.push({cap:q.name + (f.name ? " – " + f.name : ""), f}));
+        });
+      }
+      return {name:m.name, loc, items};
+    }).filter(g => g.items.length);
+    const total = groups.reduce((a, g) => a + g.items.length, 0);
+    return {kind:"photos", mode,
+            title:t(mode === "motor" ? "repPhotoMotorTitle" : "repPhotoEquipTitle", node.name),
+            sub:crumbs(), date:stamp(),
+            base:`${safe(node.name)}_${mode === "motor" ? "motor" : "equipment"}_photos_${today()}`,
+            groups, total};
+  }
+
   function openRep(k){
     if (!canReport()) return;
     rep = k;
@@ -2254,12 +2473,17 @@
     render(); window.scrollTo(0,0);
   }
 
-  function renderReports(panel){
+  function renderReports(node){
     const d = $("detail");
     d.innerHTML = "";
+    const atPanel = path.length === 3;
+    if (rep === "equip" && !atPanel) rep = "menu";
     if (rep === "menu"){
-      [["📋",t("rMotors"),t("rMotorsDesc"),"motors"],
-       ["🧰",t("rEquip"),t("rEquipDesc"),"equip"]].forEach(([ic,title,s,k]) => {
+      const list = [["📋",t("rMotors"),t("rMotorsDesc"),"motors"]];
+      if (atPanel) list.push(["🧰",t("rEquip"),t("rEquipDesc"),"equip"]);
+      list.push(["📷",t("rPhotoMotor"),t("rPhotoMotorDesc"),"pmotor"],
+                ["🖼️",t("rPhotoEquip"),t("rPhotoEquipDesc"),"pequip"]);
+      list.forEach(([ic,title,s,k]) => {
         const row = document.createElement("div");
         row.className = "eqrow";
         const n = document.createElement("div");
@@ -2273,14 +2497,16 @@
       });
       return;
     }
-    if (rep === "motors") return viewMotors(d, dataMotors(panel));
-    viewEquip(d, dataEquip(panel));
+    if (rep === "motors") return viewMotors(d, dataMotors(node));
+    if (rep === "pmotor") return viewPhotos(d, dataPhotos(node, "motor"));
+    if (rep === "pequip") return viewPhotos(d, dataPhotos(node, "equip"));
+    viewEquip(d, dataEquip(node));
   }
 
   function exportBar(D){
     const bar = document.createElement("div");
     bar.className = "rhead";
-    [["📗 Excel","x", async () => dl(xlsxBlob(D), D.base + ".xlsx")],
+    [["📗 Excel","x", async () => dl(D.kind === "photos" ? await xlsxPhotosBlob(D) : xlsxBlob(D), D.base + ".xlsx")],
      ["📕 PDF","p",   () => exportPDF(D)],
      ["📘 Word","w",  async () => dl(await docxBlob(D), D.base + ".docx")]
     ].forEach(([txt,c,fn]) => {
@@ -2289,7 +2515,9 @@
       b.onclick = async () => {
         if (b.dataset.busy) return;
         b.dataset.busy = "1"; b.textContent = "…";
+        toast(t("repPrep"), 0);
         try { await fn(); } catch(e){ console.error(e); alert(t("exportFail")); }
+        toast("");
         b.textContent = txt; delete b.dataset.busy;
       };
       bar.appendChild(b);
@@ -2306,28 +2534,37 @@
   function viewMotors(d, D){
     d.appendChild(exportBar(D));
     d.appendChild(metaBlock(D));
+    if (!D.groups.length){
+      const e = document.createElement("div");
+      e.className = "empty"; e.style.gridColumn = "auto"; e.textContent = t("noMotors");
+      d.appendChild(e);
+      return;
+    }
+    const span = 2 + D.cols.length;
     const wrap = document.createElement("div");
     wrap.className = "rwrap";
     const tb_ = document.createElement("table");
-    tb_.className = "rt";
+    tb_.className = "rt wide";
     const th = document.createElement("thead");
-    th.innerHTML = `<tr><th>#</th><th class="l">${esc(t("thMotor"))}</th><th>${esc(t("thCur"))}</th><th>${esc(t("thPow"))}</th></tr>`;
+    th.innerHTML = `<tr><th>#</th><th class="l">${esc(t("thMotor"))}</th>${D.cols.map(c => `<th>${esc(c.label)}</th>`).join("")}</tr>`;
     const tb = document.createElement("tbody");
-    D.rows.forEach(r => {
-      const tr = document.createElement("tr");
-      [[r.i,""],[r.name,"l"],[fmtN(r.a),""],[fmtN(r.kw),""]].forEach(([v,c]) => {
-        const td = document.createElement("td"); td.className = c; td.textContent = v; tr.appendChild(td);
+    D.groups.forEach(g => {
+      const gr = document.createElement("tr");
+      gr.className = "grp";
+      gr.innerHTML = `<td colspan="${span}">🗄️ ${esc(g.name)}${g.loc ? "  ·  " + esc(g.loc) : ""}</td>`;
+      tb.appendChild(gr);
+      g.rows.forEach(x => {
+        const tr = document.createElement("tr");
+        [[x.i,""],[x.name,"l"],...x.vals.map(v => [v,""])].forEach(([v,c]) => {
+          const td = document.createElement("td"); td.className = c; td.textContent = v; tr.appendChild(td);
+        });
+        tb.appendChild(tr);
       });
-      tb.appendChild(tr);
     });
-    if (!D.rows.length){
-      const tr = document.createElement("tr");
-      tr.innerHTML = `<td colspan="4">${esc(t("noMotors"))}</td>`;
-      tb.appendChild(tr);
-    }
     const tf = document.createElement("tfoot");
     const fr = document.createElement("tr");
-    [[D.total.count,""],[t("totalMotors"),"l"],[D.total.a,""],[D.total.kw,""]].forEach(([v,c]) => {
+    [[D.total.count,""],[t("totalMotors"),"l"],
+     ...D.cols.map(c => [c.tot === "kw" ? D.total.kw : c.tot === "a" ? D.total.a : "", ""])].forEach(([v,c]) => {
       const td = document.createElement("td"); td.className = c; td.textContent = v; fr.appendChild(td);
     });
     tf.appendChild(fr);
@@ -2394,7 +2631,7 @@
           const it = document.createElement("div"); it.className = "fitem";
           const thb = document.createElement("div"); thb.className = "thumb";
           const im = document.createElement("img"); thb.appendChild(im);
-          dbGet(f.id).then(b => { if (b){ const u = URL.createObjectURL(b); im.src = u; it.onclick = () => openLightbox(u); } });
+          dbGet(f.id).then(b => { if (b){ const u = URL.createObjectURL(b); im.src = u; it.onclick = () => openLightbox(u, dlName(f)); } });
           it.appendChild(thb); g.appendChild(it);
         });
         if (!q.photos.length){
@@ -2405,6 +2642,49 @@
         det.appendChild(inn);
         body.appendChild(det);
       });
+      box.append(hh, body);
+      d.appendChild(box);
+    });
+  }
+
+  /* photo report on screen: all photos of the motors under this zone / room / panel */
+  function viewPhotos(d, D){
+    d.appendChild(exportBar(D));
+    d.appendChild(metaBlock(D));
+    const note = document.createElement("div");
+    note.className = "rnote";
+    note.style.margin = "0 0 12px";
+    note.textContent = t("photosCount", D.total) + "  ·  " + t("photosNote");
+    d.appendChild(note);
+    if (!D.groups.length){
+      const e = document.createElement("div");
+      e.className = "empty"; e.style.gridColumn = "auto"; e.textContent = t("noPhotosAll");
+      d.appendChild(e);
+      return;
+    }
+    D.groups.forEach(g => {
+      const box = document.createElement("div");
+      box.className = "rmotor";
+      const hh = document.createElement("h4");
+      hh.textContent = "⚙️ " + g.name;
+      const sm = document.createElement("small"); sm.textContent = t("photosCount", g.items.length);
+      hh.appendChild(sm);
+      const body = document.createElement("div");
+      body.className = "body";
+      const loc = document.createElement("div");
+      loc.className = "rnote"; loc.style.margin = "0 0 8px"; loc.textContent = g.loc;
+      const grid = document.createElement("div");
+      grid.className = "fgrid";
+      g.items.forEach(it => {
+        const el = document.createElement("div"); el.className = "fitem";
+        const thb = document.createElement("div"); thb.className = "thumb";
+        const im = document.createElement("img"); thb.appendChild(im);
+        dbGet(it.f.id).then(b => { if (b){ const u = URL.createObjectURL(b); im.src = u; el.onclick = () => openLightbox(u, dlName(it.f)); } });
+        const cp = document.createElement("div"); cp.className = "fcap"; cp.textContent = it.cap;
+        el.append(thb, cp);
+        grid.appendChild(el);
+      });
+      body.append(loc, grid);
       box.append(hh, body);
       d.appendChild(box);
     });
@@ -2460,46 +2740,10 @@
   const XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
 
   /* ---------- Excel (.xlsx) ---------- */
-  function xlsxBlob(D){
-    const L = "ABCDEFGHIJ", out = [], merges = [];
-    let r = 1, widths, ncol;
-    const cell = (c, v, s) => typeof v === "number"
-      ? `<c r="${L[c]}${r}" s="${s}"><v>${v}</v></c>`
-      : `<c r="${L[c]}${r}" s="${s}" t="inlineStr"><is><t xml:space="preserve">${esc(v)}</t></is></c>`;
-    const row = (cells, ht) => { out.push(`<row r="${r}"${ht ? ` ht="${ht}" customHeight="1"` : ""}>${cells.map((x,i) => cell(i, x[0], x[1])).join("")}</row>`); r++; };
-    const merge = () => merges.push(`A${r-1}:${L[ncol-1]}${r-1}`);
-    const blank = n => Array.from({length:n}, () => ["",1]);
-
-    if (D.kind === "motors"){
-      ncol = 4; widths = [7,36,18,18];
-      row([[D.title,1], ...blank(3)], 28); merge();
-      row([[D.sub + "  ·  " + D.date,7], ...blank(3).map(() => ["",7])]); merge();
-      r++;
-      row([["#",2],[t("thMotor"),2],[t("thCur"),2],[t("thPow"),2]], 22);
-      D.rows.forEach(x => row([[x.i,9],[x.name,3], x.a==null ? ["—",9] : [x.a,4], x.kw==null ? ["—",9] : [x.kw,4]]));
-      row([[D.total.count,10],[t("totalMotors"),5],[D.total.a,6],[D.total.kw,6]], 22);
-    } else {
-      ncol = 5; widths = [16,24,28,36,14];
-      row([[D.title,1], ...blank(4)], 28); merge();
-      row([[D.sub + "  ·  " + D.date,7], ...blank(4).map(() => ["",7])]); merge();
-      r++;
-      row([[t("thMotor"),2],[t("tEquip"),2],[t("thParam"),2],[t("thValue"),2],[t("xPhotos"),2]], 22);
-      D.motors.forEach(m => {
-        row([[m.name,8], ...Array.from({length:4}, () => ["",8])], 20); merge();
-        if (!m.equip.length) row([["",3],[t("noEquipReg"),3],["",3],["",3],["",3]]);
-        m.equip.forEach(q => {
-          const lines = [];
-          if (q.desc) lines.push([t("desc"), q.desc]);
-          q.specs.forEach(s => lines.push(s));
-          if (!lines.length) lines.push(["—","—"]);
-          lines.forEach((ln,i) => row([["",3],[i===0 ? q.name : "",3],[ln[0],3],[ln[1],3],[i===0 ? q.photos.length : "", i===0 ? 9 : 3]]));
-        });
-      });
-    }
-    const sheet = XML + `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><sheetViews><sheetView${isRTL() ? ' rightToLeft="1"' : ""} showGridLines="0" workbookViewId="0"/></sheetViews><cols>${widths.map((w,i) => `<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join("")}</cols><sheetData>${out.join("")}</sheetData><mergeCells count="${merges.length}">${merges.map(m => `<mergeCell ref="${m}"/>`).join("")}</mergeCells><pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/><pageSetup paperSize="9" orientation="portrait" fitToWidth="1" fitToHeight="0"/></worksheet>`;
+  function xlsxStyles(){
     const bd = '<border><left style="thin"><color rgb="FFB9C8EA"/></left><right style="thin"><color rgb="FFB9C8EA"/></right><top style="thin"><color rgb="FFB9C8EA"/></top><bottom style="thin"><color rgb="FFB9C8EA"/></bottom><diagonal/></border>';
     const fill = c => `<fill><patternFill patternType="solid"><fgColor rgb="FF${c}"/><bgColor indexed="64"/></patternFill></fill>`;
-    const styles = XML + `<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+    return XML + `<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
 <numFmts count="1"><numFmt numFmtId="164" formatCode="0.00"/></numFmts>
 <fonts count="5"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="16"/><color rgb="FF1F3A7A"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font><font><i/><sz val="10"/><color rgb="FF6D7FA6"/><name val="Calibri"/></font></fonts>
 <fills count="4"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>${fill("4A80E8")}${fill("E8EEFB")}</fills>
@@ -2518,19 +2762,116 @@
 <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="top"/></xf>
 <xf numFmtId="1" fontId="3" fillId="3" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
 </cellXfs></styleSheet>`;
+  }
+  /* wraps one worksheet into an .xlsx file; extra = pictures (drawing, media, relationships) */
+  function xlsxZip(sheet, extraFiles = [], extraTypes = ""){
     return makeZip([
-      {name:"[Content_Types].xml", data: XML + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'},
+      {name:"[Content_Types].xml", data: XML + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>' + extraTypes + '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'},
       {name:"_rels/.rels", data: XML + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'},
       {name:"xl/workbook.xml", data: XML + '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Report" sheetId="1" r:id="rId1"/></sheets></workbook>'},
       {name:"xl/_rels/workbook.xml.rels", data: XML + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'},
-      {name:"xl/styles.xml", data: styles},
+      {name:"xl/styles.xml", data: xlsxStyles()},
       {name:"xl/worksheets/sheet1.xml", data: sheet},
+      ...extraFiles
     ], "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  }
+
+  function xlsxBlob(D){
+    const out = [], merges = [];
+    let r = 1, widths, ncol;
+    const cell = (c, v, s) => typeof v === "number"
+      ? `<c r="${colName(c)}${r}" s="${s}"><v>${v}</v></c>`
+      : `<c r="${colName(c)}${r}" s="${s}" t="inlineStr"><is><t xml:space="preserve">${esc(v)}</t></is></c>`;
+    const row = (cells, ht) => { out.push(`<row r="${r}"${ht ? ` ht="${ht}" customHeight="1"` : ""}>${cells.map((x,i) => cell(i, x[0], x[1])).join("")}</row>`); r++; };
+    const merge = () => merges.push(`A${r-1}:${colName(ncol-1)}${r-1}`);
+    const blank = (n, s = 1) => Array.from({length:n}, () => ["", s]);
+
+    if (D.kind === "motors"){
+      ncol = 2 + D.cols.length;
+      widths = [6, 22, ...D.cols.map(c => c.k.length > 14 ? 22 : 16)];
+      row([[D.title,1], ...blank(ncol - 1)], 28); merge();
+      row([[D.sub + "  ·  " + D.date,7], ...blank(ncol - 1, 7)]); merge();
+      r++;
+      row([["#",2],[t("thMotor"),2], ...D.cols.map(c => [c.label,2])], 22);
+      D.groups.forEach(g => {
+        row([["🗄 " + g.name + (g.loc ? "  –  " + g.loc : ""),8], ...blank(ncol - 1, 8)], 20); merge();
+        g.rows.forEach(x => row([[x.i,9],[x.name,3], ...x.vals.map(v => [v,3])]));
+      });
+      row([[D.total.count,10],[t("totalMotors"),5],
+           ...D.cols.map(c => c.tot === "kw" ? [D.total.kw,6] : c.tot === "a" ? [D.total.a,6] : ["",5])], 22);
+    } else {
+      ncol = 5; widths = [16,24,28,36,14];
+      row([[D.title,1], ...blank(4)], 28); merge();
+      row([[D.sub + "  ·  " + D.date,7], ...blank(4, 7)]); merge();
+      r++;
+      row([[t("thMotor"),2],[t("tEquip"),2],[t("thParam"),2],[t("thValue"),2],[t("xPhotos"),2]], 22);
+      D.motors.forEach(m => {
+        row([[m.name,8], ...blank(4, 8)], 20); merge();
+        if (!m.equip.length) row([["",3],[t("noEquipReg"),3],["",3],["",3],["",3]]);
+        m.equip.forEach(q => {
+          const lines = [];
+          if (q.desc) lines.push([t("desc"), q.desc]);
+          q.specs.forEach(s => lines.push(s));
+          if (!lines.length) lines.push(["—","—"]);
+          lines.forEach((ln,i) => row([["",3],[i===0 ? q.name : "",3],[ln[0],3],[ln[1],3],[i===0 ? q.photos.length : "", i===0 ? 9 : 3]]));
+        });
+      });
+    }
+    const orient = D.kind === "motors" ? "landscape" : "portrait";
+    const sheet = XML + `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><sheetViews><sheetView${isRTL() ? ' rightToLeft="1"' : ""} showGridLines="0" workbookViewId="0"/></sheetViews><cols>${widths.map((w,i) => `<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join("")}</cols><sheetData>${out.join("")}</sheetData><mergeCells count="${merges.length}">${merges.map(m => `<mergeCell ref="${m}"/>`).join("")}</mergeCells><pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/><pageSetup paperSize="9" orientation="${orient}" fitToWidth="1" fitToHeight="0"/></worksheet>`;
+    return xlsxZip(sheet);
+  }
+
+  /* Excel photo report: the photos themselves are embedded in the sheet */
+  async function xlsxPhotosBlob(D){
+    const out = [], merges = [], pics = [];
+    let r = 1, n = 0;
+    const cell = (c, v, s) => {
+      const ref = "AB"[c] + r;
+      return typeof v === "number"
+        ? `<c r="${ref}" s="${s}"><v>${v}</v></c>`
+        : `<c r="${ref}" s="${s}" t="inlineStr"><is><t xml:space="preserve">${esc(v)}</t></is></c>`;
+    };
+    const row = (cells, ht) => { out.push(`<row r="${r}"${ht ? ` ht="${ht}" customHeight="1"` : ""}>${cells.map((x,i) => cell(i, x[0], x[1])).join("")}</row>`); r++; };
+    const merge = () => merges.push(`A${r-1}:B${r-1}`);
+
+    row([[D.title,1],["",1]], 28); merge();
+    row([[D.sub + "  ·  " + D.date,7],["",7]]); merge();
+    r++;
+    row([[t("thItem"),2],[t("xPhotos"),2]], 22);
+    for (const g of D.groups){
+      row([[g.name + (g.loc ? "  –  " + g.loc : ""),8],["",8]], 20); merge();
+      for (const it of g.items){
+        const th_ = await thumb(it.f.id, 900);
+        if (!th_){ row([[it.cap,3],["—",9]]); continue; }
+        const k = Math.min(1, 250 / th_.w, 190 / th_.h);
+        const dw = Math.max(1, Math.round(th_.w * k)), dh = Math.max(1, Math.round(th_.h * k));
+        n++;
+        pics.push({n, row:r - 1, w:dw * 9525, h:dh * 9525, data:new Uint8Array(await th_.blob.arrayBuffer())});
+        row([[it.cap,3],["",3]], Math.round(dh * 0.75 + 10));
+      }
+    }
+    const sheet = XML + `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><sheetViews><sheetView${isRTL() ? ' rightToLeft="1"' : ""} showGridLines="0" workbookViewId="0"/></sheetViews><cols><col min="1" max="1" width="38" customWidth="1"/><col min="2" max="2" width="38" customWidth="1"/></cols><sheetData>${out.join("")}</sheetData><mergeCells count="${merges.length}">${merges.map(m => `<mergeCell ref="${m}"/>`).join("")}</mergeCells><pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/><pageSetup paperSize="9" orientation="portrait" fitToWidth="1" fitToHeight="0"/>${pics.length ? '<drawing r:id="rId1"/>' : ""}</worksheet>`;
+    if (!pics.length) return xlsxZip(sheet);
+
+    const REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+    const drawing = XML + '<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="' + REL + '">' +
+      pics.map(p => `<xdr:oneCellAnchor><xdr:from><xdr:col>1</xdr:col><xdr:colOff>57150</xdr:colOff><xdr:row>${p.row}</xdr:row><xdr:rowOff>47625</xdr:rowOff></xdr:from><xdr:ext cx="${p.w}" cy="${p.h}"/><xdr:pic><xdr:nvPicPr><xdr:cNvPr id="${p.n + 1}" name="Picture ${p.n}"/><xdr:cNvPicPr><a:picLocks noChangeAspect="1"/></xdr:cNvPicPr></xdr:nvPicPr><xdr:blipFill><a:blip r:embed="rId${p.n}"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill><xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${p.w}" cy="${p.h}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic><xdr:clientData/></xdr:oneCellAnchor>`).join("") +
+      '</xdr:wsDr>';
+    const extra = [
+      {name:"xl/drawings/drawing1.xml", data: drawing},
+      {name:"xl/drawings/_rels/drawing1.xml.rels", data: XML + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' + pics.map(p => `<Relationship Id="rId${p.n}" Type="${REL}/image" Target="../media/image${p.n}.jpg"/>`).join("") + '</Relationships>'},
+      {name:"xl/worksheets/_rels/sheet1.xml.rels", data: XML + `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${REL}/drawing" Target="../drawings/drawing1.xml"/></Relationships>`},
+      ...pics.map(p => ({name:`xl/media/image${p.n}.jpg`, data:p.data}))
+    ];
+    const types = '<Default Extension="jpg" ContentType="image/jpeg"/><Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>';
+    return xlsxZip(sheet, extra, types);
   }
 
   /* ---------- Word (.docx) with embedded photos ---------- */
   async function docxBlob(D){
     const rtl = isRTL();
+    const land = D.kind === "motors";        // the motors table is wide: landscape page
     const media = [], rels = [];
     let imgN = 0;
     const run = (txt, o={}) => `<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="${rtl ? "Tahoma" : "Calibri"}"/>${o.b?"<w:b/>":""}${o.b&&rtl?"<w:bCs/>":""}${o.i?"<w:i/>":""}${o.i&&rtl?"<w:iCs/>":""}${o.color?`<w:color w:val="${o.color}"/>`:""}<w:sz w:val="${o.sz||20}"/>${rtl?`<w:szCs w:val="${o.sz||20}"/><w:rtl/>`:""}</w:rPr><w:t xml:space="preserve">${esc(txt)}</w:t></w:r>`;
@@ -2546,14 +2887,52 @@
     body.push(para(run(D.sub + "  ·  " + D.date,{sz:18,color:"6D7FA6"}), {after:200}));
 
     if (D.kind === "motors"){
-      const wd = [700,4806,2200,2200];
-      let rows = tr(["#",t("thMotor"),t("thCur"),t("thPow")].map((hd_,i) => tc(hd_, wd[i], {b:1,color:"FFFFFF",fill:"4A80E8",jc:"center"})).join(""), true);
-      D.rows.forEach((x,i) => {
-        const f = i%2 ? "F5F8FE" : null;
-        rows += tr(tc(String(x.i),wd[0],{jc:"center",fill:f}) + tc(x.name,wd[1],{fill:f}) + tc(fmtN(x.a),wd[2],{jc:"center",fill:f}) + tc(fmtN(x.kw),wd[3],{jc:"center",fill:f}));
+      /* all parameters as columns, panel names as full-width group rows, totals only under power and current */
+      const n = D.cols.length;
+      const pw = Math.max(650, Math.floor((15438 - 2100) / Math.max(1, n)));
+      const wd = [500, 1600, ...D.cols.map(() => pw)];
+      const sum = wd.reduce((a,b) => a + b, 0);
+      const fs = n > 12 ? 13 : n > 8 ? 15 : 17;
+      let rows = tr(["#", t("thMotor"), ...D.cols.map(c => c.label)].map((hd_,i) => tc(hd_, wd[i], {b:1,color:"FFFFFF",fill:"4A80E8",jc:"center",sz:fs})).join(""), true);
+      D.groups.forEach(g => {
+        rows += `<w:tr><w:trPr><w:cantSplit/></w:trPr><w:tc><w:tcPr><w:tcW w:w="${sum}" w:type="dxa"/><w:gridSpan w:val="${wd.length}"/><w:shd w:val="clear" w:color="auto" w:fill="1F3A7A"/><w:vAlign w:val="center"/></w:tcPr>${para(run("🗄  " + g.name + (g.loc ? "  –  " + g.loc : ""), {b:1,color:"FFFFFF",sz:fs + 2}), {after:0})}</w:tc></w:tr>`;
+        g.rows.forEach((x,i) => {
+          const f = i % 2 ? "F5F8FE" : null;
+          rows += tr(tc(String(x.i),wd[0],{jc:"center",fill:f,sz:fs}) + tc(x.name,wd[1],{fill:f,sz:fs}) +
+                     x.vals.map((v,j) => tc(v,wd[j+2],{jc:"center",fill:f,sz:fs})).join(""));
+        });
       });
-      rows += tr(tc(String(D.total.count),wd[0],{b:1,jc:"center",fill:"E8EEFB"}) + tc(t("totalMotors"),wd[1],{b:1,fill:"E8EEFB"}) + tc(String(D.total.a),wd[2],{b:1,jc:"center",fill:"E8EEFB"}) + tc(String(D.total.kw),wd[3],{b:1,jc:"center",fill:"E8EEFB"}));
+      rows += tr(tc(String(D.total.count),wd[0],{b:1,jc:"center",fill:"E8EEFB",sz:fs}) + tc(t("totalMotors"),wd[1],{b:1,fill:"E8EEFB",sz:fs}) +
+                 D.cols.map((c,j) => tc(c.tot === "kw" ? String(D.total.kw) : c.tot === "a" ? String(D.total.a) : "", wd[j+2], {b:1,jc:"center",fill:"E8EEFB",sz:fs})).join(""));
       body.push(tbl(wd, rows), para(""));
+    } else if (D.kind === "photos"){
+      /* two photos per row, each with its caption */
+      const colW = 4953;
+      if (!D.groups.length) body.push(para(run(t("noPhotosAll"),{i:1,color:"8A97B5"})));
+      for (const g of D.groups){
+        body.push(para(run("  ⚙  " + g.name,{b:1,sz:24,color:"FFFFFF"}), {fill:"1F3A7A", before:240, after:60, keep:1}));
+        if (g.loc) body.push(para(run(g.loc,{sz:16,color:"6D7FA6"}), {after:80, keep:1}));
+        const cells = [];
+        for (const it of g.items){
+          const th_ = await thumb(it.f.id, 900);
+          let inner = "";
+          if (th_){
+            imgN++;
+            media.push({name:`word/media/image${imgN}.jpg`, data:new Uint8Array(await th_.blob.arrayBuffer())});
+            rels.push(`<Relationship Id="rId${imgN}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image${imgN}.jpg"/>`);
+            const k = Math.min(2700000/th_.w, 2160000/th_.h);
+            inner += para(drawing(imgN, Math.round(th_.w*k), Math.round(th_.h*k)), {after:20, jc:"center"});
+          }
+          inner += para(run(it.cap,{sz:16,color:"444444"}), {after:0, jc:"center"});
+          cells.push(inner);
+        }
+        let rows = "";
+        for (let i = 0; i < cells.length; i += 2){
+          const c2 = cells[i+1] || para("", {after:0});
+          rows += `<w:tr><w:trPr><w:cantSplit/></w:trPr><w:tc><w:tcPr><w:tcW w:w="${colW}" w:type="dxa"/><w:vAlign w:val="center"/></w:tcPr>${cells[i]}</w:tc><w:tc><w:tcPr><w:tcW w:w="${colW}" w:type="dxa"/><w:vAlign w:val="center"/></w:tcPr>${c2}</w:tc></w:tr>`;
+        }
+        body.push(tbl([colW, colW], rows), para("", {after:60}));
+      }
     } else {
       const wd = [3400,6506];
       for (const m of D.motors){
@@ -2581,7 +2960,10 @@
         }
       }
     }
-    const doc = XML + `<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><w:body>${body.join("")}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1000" w:right="1000" w:bottom="1000" w:left="1000" w:header="500" w:footer="500" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+    const sect = land
+      ? '<w:sectPr><w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/><w:pgMar w:top="700" w:right="700" w:bottom="700" w:left="700" w:header="400" w:footer="400" w:gutter="0"/></w:sectPr>'
+      : '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1000" w:right="1000" w:bottom="1000" w:left="1000" w:header="500" w:footer="500" w:gutter="0"/></w:sectPr>';
+    const doc = XML + `<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><w:body>${body.join("")}${sect}</w:body></w:document>`;
     return makeZip([
       {name:"[Content_Types].xml", data: XML + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="jpg" ContentType="image/jpeg"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>'},
       {name:"_rels/.rels", data: XML + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>'},
@@ -2600,27 +2982,51 @@
         if (th_) imgs[f.id] = await toDataURL(th_.blob);
       }
     }
-    const css = `@page{size:A4;margin:14mm}*{box-sizing:border-box}
+    if (D.kind === "photos"){
+      for (const g of D.groups) for (const it of g.items){
+        const th_ = await thumb(it.f.id, 900);
+        if (th_) imgs[it.f.id] = await toDataURL(th_.blob);
+      }
+    }
+    const land = D.kind === "motors";
+    const css = `@page{size:A4${land ? " landscape" : ""};margin:${land ? "10mm" : "14mm"}}*{box-sizing:border-box}
 body{font-family:"Segoe UI",Tahoma,Roboto,Arial,sans-serif;color:#1f3a7a;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .hd{background:#1f3a7a;color:#fff;padding:14px 18px;border-radius:8px;margin-bottom:14px}
 .hd h1{font-size:20px;margin:0}.hd p{margin:5px 0 0;font-size:11px;opacity:.85}
 table{width:100%;border-collapse:collapse;font-size:12px}
 th{background:#4a80e8;color:#fff;padding:8px;border:1px solid #b9c8ea}
 td{padding:7px 8px;border:1px solid #b9c8ea}
+tr{break-inside:avoid}
 tbody tr:nth-child(even){background:#f5f8fe}
 .c{text-align:center}
 tfoot td{background:#e8eefb;font-weight:bold;border-top:2px solid #4a80e8}
+table.mt{font-size:9.5px}table.mt th,table.mt td{padding:4px 5px;text-align:center}
+table.mt td.l{text-align:start}
+table.mt tr.gr td{background:#1f3a7a;color:#fff;font-weight:bold;font-size:11px;text-align:start}
 .m{background:#1f3a7a;color:#fff;padding:9px 12px;border-radius:6px;font-weight:bold;font-size:14px;margin:18px 0 8px;break-after:avoid}
 .q{margin:0 0 12px;break-inside:avoid}
 .q h3{font-size:13px;color:#4a80e8;margin:0 0 5px}
 .q p{font-size:11px;color:#444;font-style:italic;margin:0 0 5px}
 .ph img{height:70px;width:auto;margin:6px 6px 0 0;border:1px solid #ccd6ee;border-radius:3px}
-.no{color:#8a97b5;font-size:12px;font-style:italic}`;
+.no{color:#8a97b5;font-size:12px;font-style:italic}
+figure{margin:0}
+.pg{display:flex;flex-wrap:wrap;gap:8px}
+.fg{width:calc(50% - 4px);margin:0 0 6px;break-inside:avoid}
+.fg img{width:100%;max-height:220px;object-fit:contain;border:1px solid #ccd6ee;border-radius:4px;background:#f5f8fe}
+.fg figcaption{font-size:10px;color:#444;margin-top:2px;text-align:center}`;
     let html = `<div class="hd"><h1>${esc(D.title)}</h1><p>${esc(D.sub)} · ${esc(D.date)}</p></div>`;
     if (D.kind === "motors"){
-      html += `<table><thead><tr><th>#</th><th style="text-align:start">${esc(t("thMotor"))}</th><th>${esc(t("thCur"))}</th><th>${esc(t("thPow"))}</th></tr></thead><tbody>` +
-        D.rows.map(r => `<tr><td class="c">${r.i}</td><td>${esc(r.name)}</td><td class="c">${fmtN(r.a)}</td><td class="c">${fmtN(r.kw)}</td></tr>`).join("") +
-        `</tbody><tfoot><tr><td class="c">${D.total.count}</td><td>${esc(t("totalMotors"))}</td><td class="c">${D.total.a}</td><td class="c">${D.total.kw}</td></tr></tfoot></table>`;
+      const span = 2 + D.cols.length;
+      html += `<table class="mt"><thead><tr><th>#</th><th>${esc(t("thMotor"))}</th>${D.cols.map(c => `<th>${esc(c.label)}</th>`).join("")}</tr></thead><tbody>` +
+        D.groups.map(g => `<tr class="gr"><td colspan="${span}">🗄 ${esc(g.name)}${g.loc ? " · " + esc(g.loc) : ""}</td></tr>` +
+          g.rows.map(x => `<tr><td>${x.i}</td><td class="l">${esc(x.name)}</td>${x.vals.map(v => `<td>${esc(v)}</td>`).join("")}</tr>`).join("")).join("") +
+        `</tbody><tfoot><tr><td>${D.total.count}</td><td class="l">${esc(t("totalMotors"))}</td>${D.cols.map(c => `<td>${c.tot === "kw" ? D.total.kw : c.tot === "a" ? D.total.a : ""}</td>`).join("")}</tr></tfoot></table>`;
+    } else if (D.kind === "photos"){
+      if (!D.groups.length) html += `<div class="no">${esc(t("noPhotosAll"))}</div>`;
+      D.groups.forEach(g => {
+        html += `<div class="m">⚙ ${esc(g.name)}</div>` + (g.loc ? `<div class="no" style="margin-bottom:6px">${esc(g.loc)}</div>` : "") +
+          `<div class="pg">` + g.items.map(it => `<figure class="fg">${imgs[it.f.id] ? `<img src="${imgs[it.f.id]}">` : ""}<figcaption>${esc(it.cap)}</figcaption></figure>`).join("") + `</div>`;
+      });
     } else {
       D.motors.forEach(m => {
         html += `<div class="m">⚙ ${esc(m.name)}</div>`;
@@ -2831,6 +3237,7 @@ tfoot td{background:#e8eefb;font-weight:bold;border-top:2px solid #4a80e8}
   applyLang();
   render();
   pullRemote();
+  askPersist();
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
 </script>
 </body>
