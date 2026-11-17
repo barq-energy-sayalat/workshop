@@ -1,0 +1,3468 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2c5fd6">
+<link rel="manifest" href="manifest.json">
+<title>BIS CO. – Plant Dashboard</title>
+<style>
+  :root{--blue:#4a80e8;--dark:#1f3a7a;--deep:#12296b;--ink:#10265e;--mid:#2c5fd6;--lite:#6ea2ff;
+        --bg:#dfe8f8;--tint:#eaf0fd;--tint2:#f5f8fe;--g1:#eef4ff;--g2:#dfe9ff}
+  *{box-sizing:border-box;margin:0;font-family:"Segoe UI",Tahoma,Roboto,Arial,sans-serif;-webkit-tap-highlight-color:transparent}
+  body{background:var(--bg);min-height:100vh;display:flex;justify-content:center}
+  .app{width:100%;max-width:430px;min-height:100vh;background:#fff;position:relative;overflow:hidden}
+  .app.root{background:linear-gradient(180deg,var(--g1) 0%,var(--g2) 100%)}
+  .app.motor{background:linear-gradient(180deg,var(--g1) 0%,var(--g2) 100%)}
+
+  .hero{position:relative;color:#fff;padding:50px 24px 70px;
+    border-radius:0 0 44px 44px;overflow:hidden;
+    background-color:var(--blue);background-size:cover;background-position:center}
+  .hero.small{padding:46px 24px 60px}
+  .hero::before,.hero::after{content:"";position:absolute;border-radius:50%;background:rgba(255,255,255,.1)}
+  .hero::before{width:220px;height:220px;right:-70px;top:-60px}
+  .hero::after{width:160px;height:160px;left:-50px;bottom:20px}
+  .top{display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1}
+  .menu{width:44px;height:44px;display:grid;place-items:center;cursor:pointer}
+  .menu div{width:26px;height:18px;display:flex;flex-direction:column;justify-content:space-between}
+  .menu i{height:3px;background:#fff;border-radius:3px}
+  .menu i:nth-child(2){width:70%}
+  .tools{display:flex;gap:10px;align-items:center}
+  .btn{width:44px;height:44px;border-radius:50%;background:#fff;border:3px solid rgba(255,255,255,.6);
+    display:grid;place-items:center;font-size:20px;cursor:pointer;color:var(--blue);font-weight:bold}
+  #heroBtn{display:none}
+  body.admin #heroBtn{display:grid}
+  .pill{display:none;background:#ffd95a;color:#6b4e00;border-radius:20px;padding:6px 12px;font-size:12px;font-weight:bold}
+  body.admin .pill{display:block}
+  .hero h1{margin-top:26px;font-size:26px;line-height:1.4;position:relative;z-index:1;letter-spacing:.3px}
+  .hero p{margin-top:8px;font-size:13px;opacity:.9;position:relative;z-index:1}
+
+  .search{position:relative;z-index:2;margin:-26px 24px 0;background:#fff;border-radius:16px;
+    box-shadow:0 10px 25px rgba(40,70,150,.2);display:flex;align-items:center;padding:0 16px;gap:10px}
+  .search input{flex:1;border:0;outline:0;padding:16px 0;font-size:14px;background:transparent;color:var(--dark)}
+  .search span{opacity:.5}
+
+  .label{text-align:center;color:#8a97b5;font-size:14px;margin:26px 0 16px}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:0 24px 40px}
+  .card{position:relative;background:#fff;border-radius:20px;padding:22px 10px 18px;
+    text-align:center;cursor:pointer;color:var(--dark);
+    box-shadow:0 2px 0 var(--bg),0 8px 22px rgba(40,70,150,.18);
+    transition:transform .15s;word-break:break-word}
+  .card:active{transform:scale(.96)}
+
+  /* ===== 3D icon ===== */
+  .icon{
+    width:64px;height:64px;margin:0 auto 14px;border-radius:18px;
+    position:relative;display:grid;place-items:center;font-size:32px;overflow:hidden;
+    background:linear-gradient(145deg,var(--lite) 0%,var(--blue) 50%,var(--mid) 100%);
+    text-shadow:0 3px 3px rgba(0,0,0,.35);
+    transform:translateY(-3px);
+    transition:transform .15s, box-shadow .15s;
+    box-shadow:
+      inset 0 3px 4px rgba(255,255,255,.6),
+      inset 0 -6px 8px rgba(20,45,120,.45),
+      0 2px 0 #2c56b0,
+      0 5px 0 #234a9e,
+      0 11px 16px rgba(31,58,122,.45);
+  }
+  .icon::after{
+    content:"";position:absolute;left:0;right:0;top:0;height:48%;
+    background:linear-gradient(rgba(255,255,255,.38),rgba(255,255,255,0));
+    border-radius:18px 18px 60% 60%/18px 18px 22px 22px;
+    pointer-events:none;
+  }
+  .icon img{width:100%;height:100%;object-fit:cover}
+  .card:active .icon{
+    transform:translateY(2px);
+    box-shadow:
+      inset 0 3px 4px rgba(255,255,255,.5),
+      inset 0 -4px 6px rgba(20,45,120,.4),
+      0 1px 0 #234a9e,
+      0 4px 8px rgba(31,58,122,.4);
+  }
+  .icon.real3d{
+    background:none;box-shadow:none;overflow:visible;
+    transform:none;width:72px;height:72px;margin-bottom:10px;
+  }
+  .icon.real3d::after{display:none}
+  .icon.real3d img{
+    object-fit:contain;
+    filter:drop-shadow(0 8px 8px rgba(31,58,122,.35));
+    transition:transform .15s;
+  }
+  .card:active .icon.real3d{transform:none;box-shadow:none}
+  .card:active .icon.real3d img{transform:scale(.92)}
+
+  .card b{display:block;font-size:16px;letter-spacing:.5px}
+  .badge{position:absolute;top:8px;width:30px;height:30px;border-radius:50%;
+    background:var(--tint);display:none;place-items:center;font-size:14px;cursor:pointer}
+  .b-cam{left:8px}
+  .b-edit{right:8px}
+  .b-del{right:42px;background:#fde3e3}
+  .b-copy{left:8px;top:44px}
+  body.admin .badge{display:grid}
+  .card.add{border:2px dashed var(--blue);box-shadow:none;color:var(--blue);display:none}
+  body.admin .card.add{display:block}
+  .card.add .icon{background:var(--tint);color:var(--blue);box-shadow:none;font-size:34px}
+  .card.add .icon{transform:none;text-shadow:none}
+  .card.add .icon::after{display:none}
+  .hidden{display:none!important}
+  .empty{grid-column:1/3;text-align:center;color:#8a97b5;font-size:14px;padding:30px 10px;line-height:1.8}
+
+  /* ===== Main dashboard (home) ===== */
+  #dash{display:none;position:relative;min-height:100vh;overflow:hidden}
+  #dash::before{content:"";position:absolute;top:-130px;right:-100px;width:340px;height:340px;border-radius:50%;
+    background:radial-gradient(circle at 30% 30%,var(--lite),var(--mid) 60%,var(--deep));z-index:0}
+  #dash::after{content:"";position:absolute;top:-70px;left:-140px;width:300px;height:220px;border-radius:50%;
+    background:rgba(120,165,255,.22);z-index:0}
+  .dtop{position:relative;z-index:1;direction:ltr;display:flex;justify-content:space-between;align-items:center;
+    padding:calc(18px + env(safe-area-inset-top,0px)) 20px 0}
+  .dlogo{display:flex;align-items:center;gap:8px;color:var(--deep);font-weight:900;font-size:24px;letter-spacing:.5px}
+  .dtools{display:flex;gap:10px}
+  .dbtn{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.28);display:grid;place-items:center;
+    cursor:pointer;box-shadow:0 4px 14px rgba(20,50,140,.25);position:relative}
+  .dbtn.adm::after{content:"";position:absolute;right:2px;top:2px;width:12px;height:12px;border-radius:50%;
+    background:#35d070;border:2px solid #fff}
+  .hb{width:24px;height:16px;display:flex;flex-direction:column;justify-content:space-between}
+  .hb i{height:3px;background:#fff;border-radius:3px}
+  .hb i:nth-child(2){width:75%}
+  .dban{position:relative;z-index:1;direction:ltr;margin:18px 18px 0;border-radius:28px;overflow:hidden;min-height:190px;
+    background:linear-gradient(120deg,var(--tint2) 0%,var(--g2) 55%,var(--g2) 100%);box-shadow:0 14px 30px rgba(40,70,150,.22);display:flex}
+  .dban .bimg{position:absolute;right:0;top:0;bottom:0;width:64%;background-size:cover;background-position:center;
+    -webkit-mask-image:linear-gradient(to left,#000 55%,transparent);mask-image:linear-gradient(to left,#000 55%,transparent)}
+  .dban .bimg svg{position:absolute;right:0;bottom:4px;width:100%;height:auto}
+  .dban .btxt{position:relative;z-index:1;padding:22px 14px 20px 20px;max-width:60%;text-align:left}
+  .dots{display:flex;gap:6px;margin-bottom:14px}
+  .dots i{width:10px;height:10px;border-radius:50%;background:#b6c7ee}
+  .dots i:first-child{background:var(--mid)}
+  .btxt .h1{font-size:15px;font-weight:700;color:var(--dark)}
+  .btxt .h2{font-size:21px;font-weight:900;color:var(--ink);line-height:1.5;margin-top:2px}
+  .btxt .h3{font-size:12px;color:#415582;margin-top:8px}
+  .btxt .line{width:38px;height:3px;border-radius:3px;background:var(--mid);margin:10px 0 14px}
+  .bbtn{display:inline-flex;align-items:center;gap:10px;background:var(--deep);color:#fff;border-radius:22px;
+    padding:11px 20px;font-size:13px;cursor:pointer;box-shadow:0 8px 16px rgba(18,41,107,.35)}
+  .dcam,.dedit{position:absolute;right:10px;z-index:3;width:36px;height:36px;border-radius:50%;background:#fff;
+    display:none;place-items:center;cursor:pointer;box-shadow:0 4px 10px rgba(20,50,140,.25)}
+  .dcam{top:10px}
+  .dedit{top:52px}
+  body.admin .dcam,body.admin .dedit{display:grid}
+  .dsearch{position:relative;z-index:1;direction:ltr;margin:18px 18px 0;background:#fff;border-radius:22px;
+    box-shadow:0 10px 26px rgba(40,70,150,.18);display:flex;align-items:center;gap:12px;padding:0 20px}
+  .dsearch input{flex:1;border:0;outline:0;background:transparent;padding:19px 0;font-size:14px;color:var(--dark)}
+  .dres{position:relative;z-index:1;padding:16px 18px 0;display:none}
+  .rrow{display:flex;align-items:center;gap:12px;background:#fff;border-radius:16px;padding:12px 14px;margin-bottom:10px;
+    box-shadow:0 6px 16px rgba(40,70,150,.12);cursor:pointer;color:var(--dark)}
+  .rrow .ri{width:40px;height:40px;border-radius:12px;background:var(--tint);display:grid;place-items:center;font-size:20px}
+  .rrow .rtx{flex:1;min-width:0}
+  .rrow b{display:block;font-size:14px}
+  .rrow small{display:block;color:#8a97b5;font-size:11px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .zgrid{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:18px 18px 0}
+  .zc{position:relative;direction:ltr;text-align:left;border-radius:24px;padding:16px 14px 14px;min-height:152px;
+    overflow:hidden;cursor:pointer;background:linear-gradient(135deg,var(--zt) 0%,#fff 100%);
+    box-shadow:0 10px 24px rgba(40,70,150,.16);transition:transform .15s}
+  .zc:active{transform:scale(.97)}
+  .zc .zp{position:absolute;right:0;top:0;width:60%;height:60%;background-size:cover;background-position:center;
+    -webkit-mask-image:linear-gradient(to left,#000 45%,transparent);mask-image:linear-gradient(to left,#000 45%,transparent)}
+  .zc::after{content:"";position:absolute;left:-12px;bottom:-16px;width:60%;height:26px;border-radius:50%;
+    background:var(--zc);opacity:.9}
+  .zc .zi{position:relative;z-index:1;width:52px;height:52px;border-radius:50%;background:var(--zc);display:grid;
+    place-items:center;box-shadow:0 0 0 6px rgba(255,255,255,.75),0 8px 16px rgba(20,50,120,.25)}
+  .zc .zi svg{width:28px;height:28px}
+  .zc b{position:relative;z-index:1;display:block;margin-top:14px;font-size:19px;color:var(--ink);letter-spacing:.3px}
+  .zc small{position:relative;z-index:1;display:block;margin-top:2px;font-size:12px;color:#4b5f8e}
+  .zc .zgo{position:absolute;right:12px;bottom:14px;width:34px;height:34px;border-radius:50%;background:var(--zc);
+    color:#fff;display:grid;place-items:center;font-size:22px;z-index:2;box-shadow:0 6px 12px rgba(20,50,120,.3)}
+  .zgrid .card.add{min-height:152px;direction:ltr;display:none;place-content:center}
+  body.admin .zgrid .card.add{display:grid}
+  .dsum{position:relative;z-index:1;margin:16px 18px 0;background:rgba(255,255,255,.88);border-radius:26px;
+    box-shadow:0 10px 26px rgba(40,70,150,.15);padding:16px 8px 18px}
+  .dsum h4{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--dark);padding:0 10px 14px}
+  .sgrid{display:grid;grid-template-columns:repeat(4,1fr)}
+  .sitem{text-align:center;padding:0 3px;border-inline-start:1px solid #dbe4f7}
+  .sitem:first-child{border-inline-start:0}
+  .sring{width:76px;height:76px;border-radius:50%;margin:0 auto 8px;display:grid;place-items:center;
+    background:conic-gradient(var(--rc) calc(var(--p) * 1%),#e3eafa 0)}
+  .sring .in{width:60px;height:60px;border-radius:50%;background:#fff;display:grid;place-items:center;
+    box-shadow:inset 0 0 0 1px #eef2fb}
+  .sring svg{width:30px;height:30px}
+  .sval{font-size:19px;font-weight:900;color:var(--ink)}
+  .slab{font-size:11.5px;color:#4b5f8e;line-height:1.55;margin-top:2px}
+  .dfoot{position:relative;z-index:1;direction:ltr;margin-top:24px;background:linear-gradient(180deg,var(--mid),var(--deep));
+    color:#fff;border-radius:34px 34px 0 0;padding:22px 20px calc(20px + env(safe-area-inset-bottom,0px));
+    display:grid;grid-template-columns:1fr auto 1fr;align-items:center;overflow:hidden}
+  .dfoot .sky{position:absolute;left:0;bottom:0;opacity:.3;height:60px;pointer-events:none}
+  .dfoot .fm{font-weight:700;letter-spacing:1px;font-size:15px;position:relative}
+  .dfoot .fr{display:flex;align-items:center;justify-content:flex-end;gap:7px;font-size:12px;position:relative}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block;background:#9aa7c4}
+
+  /* ===== Zone dashboard (photo header + motor stats) ===== */
+  #zdash{display:none;position:relative}
+  .zhead{position:relative;min-height:330px;overflow:hidden;border-radius:0 0 40px 40px;
+    background:linear-gradient(135deg,#cfe0ff 0%,#8fb4ff 100%);box-shadow:0 14px 30px rgba(40,70,150,.22)}
+  .zhead .zimg{position:absolute;inset:0;background-size:cover;background-position:center}
+  .zhead .zov{position:absolute;inset:0;
+    background:linear-gradient(var(--ovd,to left),rgba(255,255,255,.96) 0%,rgba(255,255,255,.8) 42%,rgba(255,255,255,0) 78%)}
+  html[dir=ltr] .zhead .zov{--ovd:to right}
+  .ztop{position:relative;z-index:2;direction:ltr;display:flex;justify-content:space-between;align-items:center;
+    padding:calc(18px + env(safe-area-inset-top,0px)) 18px 0}
+  .ztx{position:relative;z-index:2;padding:22px 22px 32px;max-width:64%}
+  .zname{display:flex;align-items:center;gap:12px}
+  .zbi{width:52px;height:52px;border-radius:50%;background:var(--zc);display:grid;place-items:center;flex:none;
+    box-shadow:0 0 0 6px rgba(255,255,255,.75),0 8px 16px rgba(20,50,120,.25)}
+  .zbi svg{width:28px;height:28px}
+  .zname b{font-size:30px;font-weight:900;color:var(--ink);letter-spacing:.5px;word-break:break-word}
+  .zh1{margin-top:16px;font-size:20px;font-weight:900;color:var(--ink);line-height:1.6}
+  .zh2{margin-top:6px;font-size:12.5px;color:#415582}
+  .zcam,.zedit{position:absolute;bottom:14px;z-index:3;width:40px;height:40px;border-radius:50%;background:#fff;
+    display:none;place-items:center;cursor:pointer;box-shadow:0 4px 10px rgba(20,50,140,.25);font-size:18px}
+  .zcam{inset-inline-end:14px}
+  .zedit{inset-inline-end:62px}
+  body.admin .zcam,body.admin .zedit{display:grid}
+  .zstat{margin:16px 18px 0;background:rgba(255,255,255,.92);border-radius:26px;
+    box-shadow:0 10px 26px rgba(40,70,150,.15);padding:16px 14px}
+  .zstat h4{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--dark);padding:0 4px 14px}
+  .zsg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .zs{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,var(--zt) 0%,#fff 100%);
+    border-radius:20px;padding:14px 12px;box-shadow:0 6px 16px rgba(40,70,150,.12);min-width:0}
+  .zs .zsi{width:46px;height:46px;border-radius:50%;background:#fff;display:grid;place-items:center;flex:none;
+    box-shadow:0 4px 10px rgba(40,70,150,.15)}
+  .zs .zsi svg{width:26px;height:26px}
+  .zs .sv{font-weight:900;font-size:19px;color:var(--ink);direction:ltr;unicode-bidi:plaintext;white-space:nowrap}
+  .zs .sl{font-size:12px;color:#4b5f8e;margin-top:2px}
+  .zs .tx{min-width:0}
+
+  /* Drawer menu */
+  #ov{position:fixed;inset:0;background:rgba(15,30,70,.5);display:none;z-index:40}
+  #drawer{position:fixed;top:0;bottom:0;left:0;width:280px;max-width:82%;background:#fff;z-index:41;
+    transform:translateX(-100%);transition:transform .25s;padding:34px 18px;overflow:auto;
+    border-radius:0 26px 26px 0;box-shadow:10px 0 30px rgba(0,0,0,.2)}
+  body.menu-open #ov{display:block}
+  body.menu-open #drawer{transform:none}
+  #drawer h2{color:var(--dark);font-size:18px;margin-bottom:6px}
+  #drawer .st{font-size:12px;color:#8a97b5;margin-bottom:18px}
+  #drawer .st.on{color:#c58a00}
+  .mi{display:flex;align-items:center;gap:12px;padding:14px;border-radius:14px;background:var(--tint2);
+    color:var(--dark);font-size:14px;margin-bottom:10px;cursor:pointer}
+  .mi.red{background:#fde3e3;color:#b3302c}
+  .mi.out{background:#fff3d1;color:#7a5b00}
+  .mi.login{background:var(--blue);color:#fff;font-weight:bold;box-shadow:0 5px 12px rgba(74,128,232,.4)}
+  .mi.info{display:block;font-size:12px;line-height:1.9;white-space:pre-line;background:var(--tint)}
+  .mi.info.warnc{background:#fde3e3;color:#b3302c}
+  .langlab{font-size:12px;color:#8a97b5;margin-bottom:6px}
+  .langrow{display:flex;gap:8px;margin-bottom:18px}
+  .lg{flex:1;text-align:center;padding:11px 6px;border-radius:12px;background:var(--tint2);color:var(--dark);
+    font-size:14px;cursor:pointer}
+  .lg.on{background:var(--blue);color:#fff;font-weight:bold;box-shadow:0 5px 12px rgba(74,128,232,.4)}
+  .themerow{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+  .thc{width:34px;height:34px;border-radius:50%;cursor:pointer;border:3px solid #fff;box-shadow:0 0 0 2px #d5e0f7}
+  .thc.on{box-shadow:0 0 0 3px var(--dark)}
+  .thc.rs{background:var(--tint2);display:grid;place-items:center;color:var(--dark);font-size:16px}
+
+  /* Motor page */
+  #detail{padding:22px 20px 50px;display:none}
+  #detail.mp{padding-top:calc(16px + env(safe-area-inset-top,0px))}
+  .tabs{display:flex;gap:8px;background:#eef3fc;border-radius:16px;padding:5px;margin-bottom:18px}
+  #detail.mp .tabs{background:#fff;margin:14px 0 0;box-shadow:0 8px 22px rgba(40,70,150,.12)}
+  .tab{flex:1;text-align:center;padding:11px 4px;border-radius:12px;font-size:12.5px;color:#6d7fa6;cursor:pointer}
+  .tab.on{background:var(--blue);color:#fff;box-shadow:0 5px 12px rgba(74,128,232,.4)}
+
+  .mtop{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .cbtn{width:42px;height:42px;border-radius:50%;background:#fff;color:var(--blue);display:grid;place-items:center;
+    font-size:19px;font-weight:bold;cursor:pointer;flex:none;box-shadow:0 6px 16px rgba(40,70,150,.18)}
+  .mcrumb{flex:1;min-width:0;font-size:12px;color:#6d7fa6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mhero{position:relative;border-radius:26px;overflow:hidden;padding:20px 18px;color:#fff;min-height:170px;
+    background:linear-gradient(135deg,var(--deep) 0%,var(--mid) 62%,var(--blue) 100%);
+    box-shadow:0 14px 30px rgba(31,58,122,.35)}
+  .mhero::before{content:"";position:absolute;width:230px;height:230px;border-radius:50%;inset-inline-end:-60px;bottom:-90px;
+    background:radial-gradient(circle,rgba(120,180,255,.55),rgba(120,180,255,0) 70%)}
+  .mhero .mimg{position:absolute;inset-inline-end:-6px;bottom:0;width:56%}
+  .mhero .mimg svg{display:block;width:100%;height:auto}
+  .mhero .tx{position:relative;z-index:1;max-width:62%}
+  .mhero .lb{font-size:13px;opacity:.9}
+  .mhero h2{font-size:24px;font-weight:900;margin:2px 0 6px;letter-spacing:.5px;line-height:1.3;
+    word-break:break-word;unicode-bidi:plaintext;text-align:start}
+  .mhero .path{font-size:11px;opacity:.85;line-height:1.7;word-break:break-word}
+  .spill{display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:7px 14px;border-radius:20px;
+    font-size:12.5px;font-weight:bold;background:rgba(34,197,94,.22);border:1px solid #4ade80;color:#d9ffe6}
+  .spill i{width:10px;height:10px;border-radius:50%;background:#35d070;box-shadow:0 0 8px #35d070}
+  .spill.warn{background:rgba(250,190,40,.2);border-color:#fbbf24;color:#fff2c9}
+  .spill.warn i{background:#fbbf24;box-shadow:0 0 8px #fbbf24}
+
+  .msum{background:#fff;border-radius:24px;padding:16px;margin-top:14px;box-shadow:0 8px 22px rgba(40,70,150,.12)}
+  .msum h4{font-size:15px;color:var(--dark);margin-bottom:12px}
+  .msum .mrow{display:flex;align-items:center;gap:14px}
+  .msum .rw{text-align:center;font-size:11px;color:#4b5f8e;flex:none}
+  .msum .sring{margin:0 auto 6px}
+  .msum .pv{font-size:17px;font-weight:900;color:var(--ink)}
+  .msum .rows{flex:1;min-width:0}
+  .srow{display:flex;align-items:center;gap:8px;padding:7px 0;font-size:13px;color:var(--dark)}
+  .srow .si{width:28px;height:28px;border-radius:9px;background:var(--tint);display:grid;place-items:center;font-size:14px;flex:none}
+  .srow .sk{flex:1;color:#6d7fa6}
+  .srow b{direction:ltr;unicode-bidi:plaintext}
+
+  .mcard{background:#fff;border-radius:22px;padding:16px;margin-top:14px;box-shadow:0 8px 22px rgba(40,70,150,.12)}
+  .mcard>.sec:last-child{margin-bottom:0}
+  .mcard .plate{margin-bottom:14px}
+  .ktiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .kt{display:flex;align-items:center;gap:10px;background:var(--tint2);border-radius:16px;padding:12px 10px}
+  .kt .ic{width:36px;height:36px;border-radius:12px;background:var(--tint);display:grid;place-items:center;font-size:17px;flex:none}
+  .kt .kk{font-size:11px;color:#6d7fa6}
+  .kt .kv{font-weight:900;font-size:15px;color:var(--dark);direction:ltr;unicode-bidi:plaintext;word-break:break-word}
+  .ecards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .ec{position:relative;background:var(--tint2);border-radius:18px;padding:18px 8px 12px;text-align:center;cursor:pointer;color:var(--dark)}
+  .ec:active{transform:scale(.97)}
+  .ec .ei{width:48px;height:48px;border-radius:50%;background:var(--tint);margin:0 auto 8px;display:grid;place-items:center;font-size:23px}
+  .ec b{display:block;font-size:13px;word-break:break-word}
+  .ec small{display:block;font-size:11px;color:#8a97b5;margin-top:3px;direction:ltr;unicode-bidi:plaintext;word-break:break-word}
+  .ec .mini{position:absolute;top:8px;font-size:13px;display:none;cursor:pointer}
+  body.admin .ec .mini{display:block}
+  .ec .m1{inset-inline-start:10px}
+  .ec .m2{inset-inline-start:34px}
+
+  .sec{margin-bottom:22px}
+  .sec h3{font-size:14px;color:var(--dark);margin-bottom:10px}
+  .spec{display:flex;align-items:center;gap:8px;padding:12px 14px;border-radius:12px;background:var(--tint2);margin-bottom:8px;font-size:14px;color:var(--dark)}
+  .spec .k{flex:1;color:#6d7fa6}
+  .spec .v{font-weight:bold;min-width:70px;text-align:right;word-break:break-word}
+  .spec .mini{cursor:pointer;font-size:15px}
+  .addbtn{width:100%;border:2px dashed var(--blue);background:#fff;color:var(--blue);border-radius:14px;
+    padding:12px;font-size:14px;cursor:pointer;margin-top:4px;display:none}
+  body.admin .addbtn{display:block}
+  .fgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .fitem{position:relative;text-align:center;cursor:pointer}
+  .thumb{aspect-ratio:1;border-radius:14px;background:var(--tint);display:grid;place-items:center;font-size:34px;overflow:hidden}
+  .thumb img{width:100%;height:100%;object-fit:cover}
+  .fname{margin-top:5px;font-size:10.5px;color:#6d7fa6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fcap{margin-top:5px;font-size:10.5px;color:#6d7fa6;line-height:1.4;word-break:break-word}
+  .fsize{font-size:10px;color:#9aa7c4;direction:ltr;margin-top:1px}
+  .fdel{position:absolute;top:4px;left:4px;width:24px;height:24px;border-radius:50%;background:#fde3e3;
+    display:none;place-items:center;font-size:12px}
+  body.admin .fdel{display:grid}
+  .fdl{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;background:#e4edff;
+    display:grid;place-items:center;font-size:12px;z-index:2}
+  .ftile{aspect-ratio:1;border:2px dashed var(--blue);border-radius:14px;color:var(--blue);
+    display:none;place-items:center;font-size:30px;cursor:pointer}
+  body.admin .ftile{display:grid}
+  .nofile{grid-column:1/4;color:#9aa7c4;font-size:12px;text-align:center;padding:8px}
+
+  /* Nameplate */
+  .plate{margin-bottom:22px}
+  .plate img{display:block;width:100%;height:auto;max-height:75vh;object-fit:contain;background:#eef3fc;
+    border-radius:16px;cursor:zoom-in;box-shadow:0 6px 20px rgba(40,70,150,.18)}
+  .plate .hint{font-size:11px;color:#8a97b5;text-align:center;margin-top:8px}
+  .plate .none{aspect-ratio:4/3;border:2px dashed #b9c8ea;border-radius:16px;display:grid;place-items:center;
+    color:#8a97b5;font-size:14px;text-align:center;padding:10px;background:#f7faff}
+  .pbtns{display:none;gap:8px;margin:10px 0}
+  body.admin .pbtns{display:flex}
+  .pbtn{flex:1;text-align:center;padding:11px 6px;border-radius:12px;background:var(--tint);color:var(--blue);
+    font-size:13px;cursor:pointer}
+  .pbtn.red{background:#fde3e3;color:#b3302c}
+
+  /* Equipment list + page */
+  .eqrow{display:flex;align-items:center;gap:10px;padding:14px;border-radius:16px;background:#fff;
+    box-shadow:0 6px 18px rgba(40,70,150,.13);margin-bottom:10px;cursor:pointer;color:var(--dark)}
+  .eqrow .n{flex:1;font-weight:bold;font-size:15px;word-break:break-word}
+  .eqrow small{display:block;font-weight:normal;color:#8a97b5;font-size:11px;margin-top:3px}
+  .eqrow .go{color:#9aa7c4;font-size:22px}
+  .eqrow .mini{cursor:pointer;font-size:15px;display:none}
+  body.admin .eqrow .mini{display:inline}
+  textarea.desc{width:100%;min-height:90px;border:1.5px solid #d5e0f7;border-radius:12px;padding:12px;
+    font-size:14px;color:var(--dark);resize:vertical;font-family:inherit;outline:none;background:var(--tint2)}
+  .descv{padding:12px 14px;border-radius:12px;background:var(--tint2);font-size:14px;color:var(--dark);
+    white-space:pre-wrap;line-height:1.7;word-break:break-word}
+
+  /* Reports */
+  .rhead{display:flex;gap:8px;margin-bottom:16px}
+  .rexp{flex:1;text-align:center;padding:12px 4px;border-radius:12px;font-size:13px;font-weight:bold;
+    cursor:pointer;color:#fff;box-shadow:0 5px 12px rgba(40,70,150,.25)}
+  .rexp.x{background:#1e8a4c}
+  .rexp.p{background:#c8402f}
+  .rexp.w{background:#2b5fc9}
+  .rmeta{font-size:12px;color:#6d7fa6;margin-bottom:12px;line-height:1.7}
+  .rwrap{overflow-x:auto;border-radius:14px;box-shadow:0 6px 20px rgba(40,70,150,.13)}
+  table.rt{width:100%;border-collapse:collapse;font-size:13px;color:var(--dark)}
+  table.rt th{background:var(--blue);color:#fff;padding:11px 8px;font-size:12px;text-align:center}
+  table.rt td{padding:10px 8px;border-bottom:1px solid #e3eafa;text-align:center}
+  table.rt th.l,table.rt td.l{text-align:left}
+  table.rt tbody tr:nth-child(even){background:var(--tint2)}
+  table.rt tfoot td{background:#e8eefb;font-weight:bold;border-top:2px solid var(--blue);border-bottom:0}
+  table.rt.wide th,table.rt.wide td{white-space:nowrap;padding:9px 10px}
+  table.rt tr.grp td{background:var(--dark);color:#fff;text-align:start;font-weight:bold;border-bottom:0}
+  .rnote{font-size:11px;color:#8a97b5;margin-top:10px;line-height:1.6}
+  .rmotor{margin-bottom:18px}
+  .rmotor>h4{background:var(--dark);color:#fff;padding:12px 14px;border-radius:12px 12px 0 0;font-size:14px;
+    display:flex;justify-content:space-between;gap:8px}
+  .rmotor>h4 small{font-weight:normal;opacity:.8;font-size:11px;align-self:center}
+  .rmotor .body{border:1px solid #dbe5f8;border-top:0;border-radius:0 0 12px 12px;padding:8px}
+  .rmotor .none{color:#9aa7c4;font-size:12px;text-align:center;padding:10px}
+  details.req{border-radius:10px;background:var(--tint2);margin-bottom:8px;overflow:hidden}
+  details.req summary{padding:12px;cursor:pointer;color:var(--dark);font-weight:bold;font-size:14px;
+    list-style:none;display:flex;justify-content:space-between;gap:8px}
+  details.req summary::-webkit-details-marker{display:none}
+  details.req summary small{font-weight:normal;color:#8a97b5;font-size:11px;align-self:center}
+  details.req .in{padding:0 10px 12px}
+  details.req .in>*{margin-bottom:10px}
+
+  /* Fullscreen viewer */
+  #lb{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;place-items:center;z-index:50;
+    padding:14px;overflow:hidden}
+  #lb img{max-width:100%;max-height:100%;border-radius:6px}
+  #lbImg{touch-action:none;user-select:none;-webkit-user-drag:none;transform-origin:center}
+  #lbClose,#lbDl{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));width:44px;height:44px;
+    border-radius:50%;background:rgba(255,255,255,.22);color:#fff;display:grid;place-items:center;
+    font-size:20px;cursor:pointer;z-index:2}
+  #lbClose{right:14px}
+  #lbDl{left:14px}
+
+  /* OCR result dialog + toast */
+  #mod{position:fixed;inset:0;background:rgba(15,30,70,.55);display:none;place-items:center;z-index:60;padding:20px}
+  #mod .box{background:#fff;border-radius:20px;padding:20px;width:100%;max-width:380px;max-height:80vh;
+    overflow:auto;color:var(--dark)}
+  #mod h3{font-size:16px;margin-bottom:6px}
+  #mod .sub{font-size:12px;color:#6d7fa6;margin:12px 0 6px;font-weight:bold}
+  #mod .row{display:flex;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:10px;
+    background:var(--tint2);margin-bottom:6px;font-size:13px}
+  #mod .row span{color:#6d7fa6}
+  #mod .row b{word-break:break-word;text-align:right}
+  #mod .tip{font-size:11px;color:#8a97b5;margin-top:10px;line-height:1.7}
+  #mod .ok{margin-top:14px;text-align:center;padding:12px;border-radius:12px;background:var(--blue);
+    color:#fff;font-weight:bold;cursor:pointer}
+  #mod .ok.alt{background:var(--tint);color:var(--blue);margin-top:8px}
+  #mod .urow{display:flex;align-items:center;gap:8px;padding:10px;border-radius:10px;background:var(--tint2);
+    margin-bottom:6px;font-size:13px}
+  #mod .urow .un{flex:1;font-weight:bold;word-break:break-word}
+  #mod .urow .ut{font-size:11px;padding:4px 10px;border-radius:10px;background:var(--tint);color:var(--blue);cursor:pointer}
+  #mod .urow .ut.e{background:#ffe9b0;color:#7a5b00}
+  #mod .urow .ud{cursor:pointer;font-size:15px}
+  #mod .code{margin:14px 0 4px;text-align:center;font-size:22px;font-weight:900;letter-spacing:2px;direction:ltr;
+    padding:14px 8px;border-radius:12px;background:var(--tint2);color:var(--ink);user-select:all;word-break:break-all}
+  #toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
+    background:rgba(31,58,122,.96);color:#fff;padding:12px 18px;border-radius:14px;font-size:13px;
+    z-index:70;display:none;max-width:90%;text-align:center;line-height:1.6}
+
+  /* ===== Right-to-left (Persian) ===== */
+  html[dir=rtl] .hero::before{right:auto;left:-70px}
+  html[dir=rtl] .hero::after{left:auto;right:-50px}
+  html[dir=rtl] .b-cam{left:auto;right:8px}
+  html[dir=rtl] .b-edit{right:auto;left:8px}
+  html[dir=rtl] .b-del{right:auto;left:42px}
+  html[dir=rtl] .b-copy{left:auto;right:8px}
+  html[dir=rtl] .fdel{left:auto;right:4px}
+  html[dir=rtl] .fdl{right:auto;left:4px}
+  html[dir=rtl] #drawer{left:auto;right:0;transform:translateX(100%);border-radius:26px 0 0 26px;
+    box-shadow:-10px 0 30px rgba(0,0,0,.2)}
+  html[dir=rtl] body.menu-open #drawer{transform:none}
+  html[dir=rtl] .spec .v{text-align:left}
+  html[dir=rtl] table.rt th.l,html[dir=rtl] table.rt td.l{text-align:right}
+  html[dir=rtl] .eqrow .go{transform:scaleX(-1)}
+  html[dir=rtl] #mod .row b{text-align:left}
+  html[dir=rtl] #lbClose{right:auto;left:14px}
+  html[dir=rtl] #lbDl{left:auto;right:14px}
+  html[dir=rtl] .mhero .mimg svg{transform:scaleX(-1)}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <div id="dash"></div>
+
+  <section class="hero" id="hero">
+    <div class="top">
+      <div id="leftSlot"></div>
+      <div class="tools">
+        <div class="pill">Admin</div>
+        <div class="btn" id="heroBtn" title="Change header photo">📷</div>
+        <div class="btn" id="menuBtn2" title="Menu" style="display:none">☰</div>
+      </div>
+    </div>
+    <h1 id="title"></h1>
+    <p id="sub"></p>
+  </section>
+
+  <div id="zdash"></div>
+
+  <div class="search" id="searchBox">
+    <span>🔍</span>
+    <input id="q" placeholder="Search...">
+  </div>
+
+  <div class="label" id="label"></div>
+  <main class="grid" id="grid"></main>
+  <div id="detail"></div>
+</div>
+
+<div id="ov"></div>
+<aside id="drawer"></aside>
+<div id="lb"><div id="lbDl">⬇️</div><div id="lbClose">✕</div><img id="lbImg" alt=""></div>
+<div id="mod"><div class="box" id="modBox"></div></div>
+<div id="toast"></div>
+<input type="file" id="file" accept="image/*" style="display:none">
+<input type="file" id="imp" accept=".json,application/json" style="display:none">
+
+<script>
+  /* ===== Settings ===== */
+  const DEFAULT_PIN = "1234";   // initial password of the admin account; change it from the menu after the first login
+  const OWNER_USER = "admin";   // default username of the admin (can be changed from the menu)
+  const REQUIRE_LOGIN = true;   // true: only logged-in accounts can enter the zones. false: everyone can view
+  const ICONS  = ["🏭","🔌","🗄️","⚙️"];
+  const ICON_IMG = {
+    level1:"img/plug.png", level2:"img/cabinet.png", level3:"img/gear.png"
+  };
+  const iconFile = (n, depth) => depth === 0 ? null : ICON_IMG["level" + depth];
+  const MOTOR_DEPTH = 4;
+  /* parameter names are stored in English; they are shown translated (see SPEC_FA) */
+  const DEFAULT_SPECS = ["Power (kW)","Voltage (V)","Current (A)","Speed (RPM)","Frequency (Hz)",
+                         "Power factor (cos φ)","Insulation class","IP rating","Manufacturer","Model / Serial"];
+  const EQ_SPECS = ["Manufacturer","Model / Serial","Rating"];
+  const ACCEPT = "image/*,.pdf,application/pdf,.xls,.xlsx,.xlsm,.csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+  const ACCEPT_DOCS = ACCEPT + ",.doc,.docx,.dwg,.dxf,.txt,.zip";
+  const MAX_FILE = 40*1024*1024;      // hard limit per file
+  const WARN_FILE = 15*1024*1024;     // above this size the admin is asked to confirm
+  const LS_LIMIT = 5*1024*1024;       // approximate localStorage limit of a browser
+  const isMCS = n => /^MCS/i.test(n.name);
+
+  /* which spec rows count as "power" and "current" (these two are the only columns that get totals) */
+  const POW_RE = /power|\bkw\b|توان/i, PF_RE = /factor|cos|φ|ضریب/i, CUR_RE = /current|\(a\)|amp|جریان|آمپر/i;
+
+  /* ===== Themes (everyone can pick one; the admin can set the default for everybody) ===== */
+  const THEMES = {
+    blue:  {fa:"آبی",     en:"Blue",   v:{blue:"#4a80e8",dark:"#1f3a7a",deep:"#12296b",ink:"#10265e",mid:"#2c5fd6",lite:"#6ea2ff",bg:"#dfe8f8",tint:"#eaf0fd",tint2:"#f5f8fe",g1:"#eef4ff",g2:"#dfe9ff"}},
+    green: {fa:"سبز",     en:"Green",  v:{blue:"#2fa866",dark:"#1b5e3a",deep:"#0f3d27",ink:"#0e3321",mid:"#1f8f52",lite:"#6fd49b",bg:"#dff4e8",tint:"#e6f6ed",tint2:"#f3faf6",g1:"#eefaf3",g2:"#d9f1e3"}},
+    purple:{fa:"بنفش",    en:"Purple", v:{blue:"#7a52e0",dark:"#3e2a85",deep:"#2a1a66",ink:"#241557",mid:"#6240cf",lite:"#a88cff",bg:"#e8e2f8",tint:"#efeafd",tint2:"#f7f4fe",g1:"#f3efff",g2:"#e4dcff"}},
+    orange:{fa:"نارنجی",  en:"Orange", v:{blue:"#f28a1a",dark:"#8a4a0a",deep:"#6b3406",ink:"#5a2b05",mid:"#e0720a",lite:"#ffb866",bg:"#fbead8",tint:"#fdeedd",tint2:"#fef7ef",g1:"#fff5ea",g2:"#fde3c6"}},
+    teal:  {fa:"فیروزه‌ای",en:"Teal",   v:{blue:"#1aa3b8",dark:"#0f5a68",deep:"#083f4a",ink:"#07333c",mid:"#0e8aa0",lite:"#6fd8e8",bg:"#dcf1f5",tint:"#e3f5f8",tint2:"#f2fafc",g1:"#ecf9fb",g2:"#d4eff4"}}
+  };
+
+  /* ===== Home dashboard: zone look ===== */
+  const ZONE_ORDER = ["ASP","WTP","CAP","RWTP"];
+  const ZONE_META = {
+    ASP: {c:"#22a94b", t:"#e3f6e9", icon:"fan",  fa:["ASP","هوادهی"],               en:["ASP","Aeration"]},
+    WTP: {c:"#1d6fe0", t:"#e1ecff", icon:"drop", fa:["WTP","تصفیه خانه آب"],         en:["WTP","Water treatment"]},
+    CAP: {c:"#f28a1a", t:"#fdebd8", icon:"gear", fa:["سایر بخش‌ها","واحدهای جانبی"], en:["CAP","Auxiliary units"]},
+    RWTP:{c:"#7a52e0", t:"#ece5ff", icon:"snow", fa:["RWTP","تصفیه پساب"],           en:["RWTP","Wastewater treatment"]}
+  };
+  const SV = {
+    drop:'<svg viewBox="0 0 24 24"><path d="M12 2.5S5 10 5 14.6a7 7 0 0014 0C19 10 12 2.5 12 2.5z" fill="#fff"/></svg>',
+    fan:'<svg viewBox="0 0 24 24"><g fill="#fff"><path d="M12 11C12 6.5 9.5 3.5 7 4.5c-2 .9-1.5 4 2.4 6.3z"/><path transform="rotate(120 12 12)" d="M12 11C12 6.5 9.5 3.5 7 4.5c-2 .9-1.5 4 2.4 6.3z"/><path transform="rotate(240 12 12)" d="M12 11C12 6.5 9.5 3.5 7 4.5c-2 .9-1.5 4 2.4 6.3z"/></g><circle cx="12" cy="12" r="2.1" style="fill:var(--zc)"/></svg>',
+    snow:'<svg viewBox="0 0 24 24"><g stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M12 3v18M4.5 7.5l15 9M4.5 16.5l15-9"/><path d="M9.5 4.8L12 7l2.5-2.2M9.5 19.2L12 17l2.5 2.2"/></g></svg>',
+    gear:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7.6" fill="none" stroke="#fff" stroke-width="3.2" stroke-dasharray="3.2 2.6"/><circle cx="12" cy="12" r="5.4" fill="#fff"/><circle cx="12" cy="12" r="2.4" style="fill:var(--zc)"/></svg>',
+    search:'<svg viewBox="0 0 24 24" width="24" height="24"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="#12296b" stroke-width="2.4"/><path d="M15.5 15.5L21 21" stroke="#12296b" stroke-width="2.6" stroke-linecap="round"/></svg>',
+    bars:'<svg viewBox="0 0 24 24" width="22" height="22"><rect x="3" y="13" width="5" height="8" rx="1.2" fill="#2f63d8"/><rect x="10" y="8" width="5" height="13" rx="1.2" fill="#2f63d8"/><rect x="17" y="3" width="5" height="18" rx="1.2" fill="#2f63d8"/></svg>',
+    gauge:c => `<svg viewBox="0 0 24 24"><path d="M4 17a8 8 0 1116 0" fill="none" stroke="${c}" stroke-width="2.4" stroke-linecap="round"/><path d="M12 17l3.6-5.2" stroke="${c}" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="17" r="1.7" fill="${c}"/></svg>`,
+    bolt:c => `<svg viewBox="0 0 24 24"><path d="M13 2L5 13.5h5.5L9.5 22 19 9.5h-5.8z" fill="${c}"/></svg>`,
+    motor:c => `<svg viewBox="0 0 24 24"><rect x="3" y="8" width="13" height="9" rx="2" fill="${c}"/><rect x="16" y="10" width="4.5" height="5" rx="1" fill="${c}"/><rect x="2" y="17.5" width="15" height="2" rx="1" fill="${c}"/><rect x="8" y="5" width="4" height="3" rx="1" fill="${c}"/><path d="M6 9.5v6M9 9.5v6M12 9.5v6" stroke="#fff" stroke-width="1.1"/></svg>`,
+    heart:c => `<svg viewBox="0 0 24 24"><path d="M12 20.5S3.5 15.4 3.5 9.4A4.6 4.6 0 0112 7.1a4.6 4.6 0 018.5 2.3c0 6-8.5 11.1-8.5 11.1z" fill="${c}"/><path d="M6 11.5h3l1.5-3 2.5 6 1.5-3H18" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+    sky:'<svg viewBox="0 0 170 60" height="60"><path fill="#fff" d="M0 60V42h10V26h6v16h8V14h4v28h10V32h12v28zM60 60V36h8V20h3v16h9V28h10v32zM104 60V30h6V10h3v20h8V38h12V22h4v38zM144 60V40h8V30h4v10h14v20z"/></svg>'
+  };
+  const LOGO = '<svg width="46" height="38" viewBox="0 0 46 38"><rect x="2" y="22" width="7" height="14" fill="#12296b"/><rect x="12" y="16" width="7" height="20" fill="#12296b"/><rect x="22" y="12" width="7" height="24" fill="#12296b"/><rect x="32" y="6" width="7" height="30" fill="#12296b"/><path d="M2 18L16 9l8 5L40 2" stroke="#e11d2e" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M33 1h9v9" stroke="#e11d2e" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const MOTOR_SVG = '<svg viewBox="0 0 240 170" preserveAspectRatio="xMaxYMid meet"><defs><linearGradient id="mg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6aa9ff"/><stop offset="1" stop-color="#1b4fb8"/></linearGradient><radialGradient id="mg2" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#4f8df0"/><stop offset="1" stop-color="#14439f"/></radialGradient></defs><ellipse cx="132" cy="160" rx="100" ry="7" fill="rgba(20,50,120,.25)"/><rect x="44" y="146" width="176" height="9" rx="3" fill="#24397a"/><rect x="96" y="26" width="62" height="28" rx="5" fill="#3a78e6"/><rect x="104" y="20" width="46" height="8" rx="3" fill="#2a5fc4"/><rect x="62" y="46" width="150" height="100" rx="24" fill="url(#mg1)"/><g stroke="#1f56c4" stroke-width="3.5" opacity=".65"><path d="M96 50v92M112 50v92M128 50v92M144 50v92M160 50v92M176 50v92M192 50v92"/></g><circle cx="62" cy="96" r="50" fill="url(#mg2)"/><circle cx="62" cy="96" r="38" fill="none" stroke="#9cc0ff" stroke-width="2" opacity=".7"/><g stroke="#9cc0ff" stroke-width="2" opacity=".7"><path d="M62 58v76M24 96h76M35 69l54 54M89 69l-54 54"/></g><circle cx="62" cy="96" r="7" fill="#cfe0ff"/><rect x="212" y="82" width="22" height="28" rx="4" fill="#9fb3d6"/></svg>';
+  /* same drawing with other gradient ids (so it works on the motor page too) */
+  const MOTOR_SVG2 = MOTOR_SVG.replace(/mg1/g, "mh1").replace(/mg2/g, "mh2");
+
+  /* ===== Languages ===== */
+  const SPEC_FA = {
+    "Power (kW)":"توان (kW)", "Voltage (V)":"ولتاژ (V)", "Current (A)":"جریان (A)", "Speed (RPM)":"دور (RPM)",
+    "Frequency (Hz)":"فرکانس (Hz)", "Power factor (cos φ)":"ضریب توان (cos φ)", "Insulation class":"کلاس عایقی",
+    "IP rating":"درجه حفاظت IP", "Manufacturer":"سازنده", "Model / Serial":"مدل / سریال", "Rating":"مشخصهٔ نامی"
+  };
+  const T = {
+    en: {
+      menu:"Menu", viewOnly:"Not signed in", lang:"🌐 Language",
+      login:"🔐 Log in", userPrompt:"Username:", pwPrompt:"Password:", wrongLogin:"Wrong username or password",
+      loggedAs:"Signed in as {0}", ownerTag:"Admin", editTag:"Can edit", viewTag:"View only",
+      needLogin:"Please log in from the ☰ menu first",
+      chgPw:"🔑 Change password",
+      newPw:"New password (min 4 characters):", pwShort:"Password must be at least 4 characters",
+      repPw:"Repeat new password:", pwMismatch:"Passwords don't match", pwChanged:"Password changed",
+      manageUsers:"👥 Manage users", usersTitle:"Users", addUser:"+ Add user", newUser:"New username:",
+      newUserPw:"Password for this user (min 4 characters):", userExists:"This username already exists",
+      userReserved:"This username is reserved",
+      canRep:"Allow this user to view and export reports?\nOK = yes, Cancel = no",
+      delUserQ:"Delete user \"{0}\"?", noUsers:"No users yet. Add one with the button below.", close:"Close",
+      userHint:"Tap the tag to allow or block reports. 🔑 resets the password, ✏️ renames the user.",
+      repTag:"Reports on", noRepTag:"No reports",
+      resetPw:"New password for \"{0}\" (min 4 characters):",
+      newUserName:"New username:", userChanged:"Username changed", chgUser:"✏️ Change my username",
+      recCode:"🛟 Recovery code", recGen:"Create a new recovery code? The old one will stop working.",
+      recTitle:"Recovery code",
+      recTip:"Write this code down and keep it safe. It is shown only once. If you forget the admin password, it lets you set a new one (on this device).",
+      forgot:"❓ Forgot password", recPrompt:"Enter the recovery code:", recWrong:"Wrong recovery code",
+      noRec:"No recovery code was created for this account on this device.",
+      askAdmin:"Please ask the admin to reset your password.",
+      defPw:"You are using the default password. Please change it from the menu.",
+      theme:"🎨 Theme", themeReset:"Default",
+      themeDefaultSet:"🎨 Set this theme as default for everyone",
+      themeDefaultOk:"Default theme saved. Now export the settings file and upload it next to the app so everyone gets it.",
+      exportCfg:"📤 Export settings file",
+      eHello:"Greeting text:", eTitle:"Banner title:", eSub:"Banner subtitle:", eBtn:"Button text:",
+      eZName:"Name shown on the card:", eZSub:"Subtitle under the name:",
+      eZH1:"Header greeting:", eZH2:"Header subtitle:",
+      eEmpty:"(leave empty to restore the default)",
+      copyItem:"Copy", copying:"Copying…", copied:"Copied", copySuffix:" - Copy",
+      dlTitle:"Download", dlPlate:"⬇️ Download photo", specPhotos:"Technical-spec photos",
+      exportData:"📤 Export data", importData:"📥 Import data", resetData:"♻️ Reset data", logout:"🚪 Log out",
+      adminPill:"Admin", heroTitle:"Electrical · Energy · Fluids", heroSub:"⚡ Electrical rooms, panels & motors",
+      search:"Search...", select:"Select a {0}", addLvl:"Add {0}", newName:"New {0} name:",
+      exists:"This name already exists", renamePrompt:"New name:",
+      delItem:"Delete \"{0}\" with everything inside it (items and files)?",
+      nothing:"Nothing here yet. The admin can sign in from the ☰ menu and add items.",
+      hdrPhoto:"Change header photo", storageFull:"Storage is full",
+      lvl0:"Zone", lvl1:"Electrical Room", lvl2:"Panel", lvl3:"Motor",
+      dHello:"Welcome", dTitle:"Site Motor Management", dSub:"Smart monitoring, higher productivity",
+      dBtn:"View details", searchAll:"Search motors and zones ...", summary:"Summary",
+      sCur:"Total current", sPow:"Total power", sCnt:"Motors", sOk:"Motor data completeness",
+      zDash:"{0} zone dashboard", zSub:"Smart and fast data management", zStats:"{0} motor statistics",
+      zCnt:"Motors", zPow:"Total power", zCur:"Total current", zOk:"Data completeness",
+      online:"Online", offline:"Offline", noRes:"No results found", zoneGeneric:"Zone",
+      tSpecs:"Technical Specs", tEquip:"Equipment", tDraw:"Drawings",
+      kPow:"Rated power", kVol:"Rated voltage", kCur:"Rated current", kSpd:"Motor speed", kFrq:"Frequency", kIp:"IP rating",
+      tabSpecs:"Specs", tabEquip:"Equipment", tabDraw:"Documents",
+      summ2:"Status summary", cmpl:"Data completeness", statusFull:"Data complete", statusPart:"Data incomplete",
+      allParams:"All parameters", usedEquip:"Installed equipment", docsTitle:"Drawings & technical documents",
+      techParams:"Technical parameters", otherSpec:"Other spec files (images, PDF, Excel)",
+      eqCounts:"{0} specs · {1} photos · {2} files", noEquip:"No equipment yet.", addEquip:"+ Add equipment",
+      eqPrompt:"Equipment name (e.g. contactor, thermal relay, soft starter):", drawTitle:"Drawings (images, PDF, Excel)",
+      replace:"📷 Replace photo", delPhoto:"🗑 Delete photo", delPlateQ:"Delete the nameplate photo?",
+      noPlate:"📷 No nameplate photo yet", uploadPlate:"📷 Upload nameplate photo",
+      plateHint:"🔍 Tap the photo to view full screen and zoom", plateAlt:"Motor nameplate",
+      big40:"File is larger than 40 MB", big40n:"\"{0}\" is larger than 40 MB", saveFail:"Could not save file",
+      bigWarn:"\"{0}\" is {1} MB. Big files make the app slower. Upload anyway?",
+      noSpace:"Not enough free space on this device to save this file.",
+      stgTitle:"💾 Storage", stgFiles:"Files: {0} used of {1}", stgLs:"Photos & settings: {0} of about {1}",
+      persistOn:"🔒 Protected from automatic cleaning", persistOff:"⚠️ Not protected. Tap here to request protection (installing the app helps).",
+      renameBtn:"✏️ Rename", delEq:"🗑 Delete equipment", desc:"Description",
+      descPh:"Notes, location, condition, maintenance info...", techSpecs:"Technical specs", photos:"Photos",
+      filesTitle:"Files: PDF, drawings, manuals", eqName:"Equipment name:", delEqQ:"Delete \"{0}\" and all its files?",
+      paramName:"Parameter name:", value:"Value:", delRow:"Delete this row?", addParam:"+ Add parameter",
+      noFiles:"No files yet", delFileQ:"Delete \"{0}\"?", notFound:"File not found",
+      reports:"Reports", rMotors:"Motors report", rEquip:"Equipment report",
+      rMotorsDesc:"All parameters of every motor, grouped by panel, with total current and power at the end",
+      rEquipDesc:"Every motor with its equipment, specs and photos",
+      rPhotoMotor:"Motor photos report", rPhotoMotorDesc:"Nameplate and technical-spec photos of every motor, in one file",
+      rPhotoEquip:"Equipment photos report", rPhotoEquipDesc:"All equipment photos of every motor, in one file",
+      repPhotoMotorTitle:"{0} – Motor photos report", repPhotoEquipTitle:"{0} – Equipment photos report",
+      repPrep:"Preparing the file… (many photos can take a moment)",
+      photosCount:"{0} photos", photosNote:"Only motors that have photos are listed. Tap a photo to enlarge.",
+      noPhotosAll:"No photos found here yet.", thItem:"Item",
+      repMotorsTitle:"{0} – Motors report", repEquipTitle:"{0} – Equipment report",
+      thMotor:"Motor", thCur:"Current (A)", thPow:"Power (kW)", totalMotors:"Total",
+      noMotors:"No motors here yet.",
+      motorsNote:"Every parameter you entered for the motors is listed. Only current (A) and power (kW) are summed in the last row. Empty values show “—” and are not counted. Scroll sideways to see all columns.",
+      nEquip:"{0} equipment", noEquipReg:"No equipment registered", specsPhotos:"{0} specs · {1} photos",
+      thParam:"Parameter", thValue:"Value", noPhotos:"No photos", exportFail:"Export failed", xPhotos:"Photos",
+      imported:"Data imported", invalid:"Invalid file",
+      resetQ:"Erase all changes, photos and files and restore the default data? (Passwords and users are kept)",
+      ocrRead:"🔍 Read from photo",
+      ocrNone:"No readable parameters were found. Try a sharper photo taken straight on, with even light and no glare, or enter the values by hand.",
+      ocrFilled:"Filled in:", ocrKept:"Found, but kept the value you already had:",
+      ocrTip:"Automatic reading can misread digits. Please check the values against the plate and fix them with ✏️ if needed.",
+      ocrHp:"Power was converted from HP/CV to kW.", ok:"OK",
+      ocrReading:"🔍 Reading photo…", ocrPct:"🔍 Reading photo… {0}%",
+      ocrFail:"Couldn't read the photo. Text reading needs an internet connection the first time. The photo itself was saved."
+    },
+    fa: {
+      menu:"منو", viewOnly:"وارد نشده‌اید", lang:"🌐 زبان",
+      login:"🔐 ورود به حساب", userPrompt:"نام کاربری:", pwPrompt:"رمز عبور:", wrongLogin:"نام کاربری یا رمز اشتباه است",
+      loggedAs:"وارد شده: {0}", ownerTag:"مدیر", editTag:"دسترسی ویرایش", viewTag:"فقط مشاهده",
+      needLogin:"ابتدا از منوی ☰ وارد حساب خود شوید",
+      chgPw:"🔑 تغییر رمز",
+      newPw:"رمز جدید (حداقل ۴ کاراکتر):", pwShort:"رمز باید حداقل ۴ کاراکتر باشد",
+      repPw:"تکرار رمز جدید:", pwMismatch:"رمزها یکسان نیستند", pwChanged:"رمز تغییر کرد",
+      manageUsers:"👥 مدیریت کاربران", usersTitle:"کاربران", addUser:"+ افزودن کاربر", newUser:"نام کاربری جدید:",
+      newUserPw:"رمز این کاربر (حداقل ۴ کاراکتر):", userExists:"این نام کاربری قبلاً وجود دارد",
+      userReserved:"این نام کاربری رزرو است",
+      canRep:"به این کاربر اجازهٔ مشاهده و خروجی گرفتن از گزارش‌ها داده شود؟\nتأیید = بله، انصراف = خیر",
+      delUserQ:"کاربر «{0}» حذف شود؟", noUsers:"هنوز کاربری نیست. با دکمهٔ زیر اضافه کنید.", close:"بستن",
+      userHint:"برای فعال یا غیرفعال کردن گزارش‌گیری روی برچسب بزنید. 🔑 تغییر رمز کاربر، ✏️ تغییر نام کاربری.",
+      repTag:"گزارش‌گیری فعال", noRepTag:"بدون گزارش‌گیری",
+      resetPw:"رمز جدید برای «{0}» (حداقل ۴ کاراکتر):",
+      newUserName:"نام کاربری جدید:", userChanged:"نام کاربری تغییر کرد", chgUser:"✏️ تغییر نام کاربری من",
+      recCode:"🛟 کد بازیابی رمز", recGen:"کد بازیابی جدید ساخته شود؟ کد قبلی از کار می‌افتد.",
+      recTitle:"کد بازیابی رمز",
+      recTip:"این کد را یادداشت و جای امن نگه دارید. فقط یک‌بار نمایش داده می‌شود. اگر رمز مدیر را فراموش کردید، با آن می‌توانید رمز جدید بگذارید (روی همین دستگاه).",
+      forgot:"❓ فراموشی رمز", recPrompt:"کد بازیابی را وارد کنید:", recWrong:"کد بازیابی اشتباه است",
+      noRec:"برای این حساب روی این دستگاه کد بازیابی ساخته نشده است.",
+      askAdmin:"لطفاً از مدیر بخواهید رمز شما را بازنشانی کند.",
+      defPw:"از رمز پیش‌فرض استفاده می‌کنید. لطفاً از منو آن را تغییر دهید.",
+      theme:"🎨 تم برنامه", themeReset:"پیش‌فرض",
+      themeDefaultSet:"🎨 تنظیم این تم به‌عنوان پیش‌فرض همه",
+      themeDefaultOk:"تم پیش‌فرض ذخیره شد. حالا فایل تنظیمات را خروجی بگیرید و کنار برنامه آپلود کنید تا برای همه اعمال شود.",
+      exportCfg:"📤 خروجی فایل تنظیمات",
+      eHello:"متن خوش‌آمدگویی:", eTitle:"عنوان بنر:", eSub:"زیرنویس بنر:", eBtn:"متن دکمه:",
+      eZName:"نام نمایشی روی کارت:", eZSub:"زیرنویس زیر نام:",
+      eZH1:"متن خوش‌آمدگویی بالای صفحه:", eZH2:"زیرنویس بالای صفحه:",
+      eEmpty:"(خالی بگذارید تا متن پیش‌فرض برگردد)",
+      copyItem:"کپی", copying:"در حال کپی…", copied:"کپی شد", copySuffix:" - کپی",
+      dlTitle:"دانلود", dlPlate:"⬇️ دانلود عکس", specPhotos:"عکس‌های مشخصات فنی",
+      exportData:"📤 خروجی گرفتن از اطلاعات", importData:"📥 وارد کردن اطلاعات", resetData:"♻️ بازنشانی اطلاعات",
+      logout:"🚪 خروج از حساب",
+      adminPill:"مدیر", heroTitle:"برق · انرژی · سیالات", heroSub:"⚡ اتاق‌های برق، تابلوها و موتورها",
+      search:"جستجو...", select:"یک {0} انتخاب کنید", addLvl:"افزودن {0}", newName:"نام {0} جدید:",
+      exists:"این نام قبلاً وجود دارد", renamePrompt:"نام جدید:",
+      delItem:"«{0}» با همهٔ محتویاتش (زیرمجموعه‌ها و فایل‌ها) حذف شود؟",
+      nothing:"هنوز چیزی اینجا نیست. مدیر می‌تواند از منوی ☰ وارد شود و مورد اضافه کند.",
+      hdrPhoto:"تغییر عکس بالای صفحه", storageFull:"حافظه پر است",
+      lvl0:"منطقه", lvl1:"اتاق برق", lvl2:"تابلو", lvl3:"موتور",
+      dHello:"خوش آمدید", dTitle:"مدیریت موتورهای سایت", dSub:"نظارت هوشمند، بهره‌وری بیشتر",
+      dBtn:"مشاهده جزئیات", searchAll:"جستجو در موتورها و مناطق ...", summary:"خلاصه اطلاعات",
+      sCur:"کل جریان", sPow:"کل توان", sCnt:"تعداد موتورها", sOk:"تکمیل اطلاعات موتورها",
+      zDash:"داشبورد منطقه {0}", zSub:"مدیریت هوشمند و سریع اطلاعات", zStats:"آمار موتورهای {0}",
+      zCnt:"تعداد موتورها", zPow:"کل توان", zCur:"کل جریان", zOk:"تکمیل اطلاعات",
+      online:"آنلاین", offline:"آفلاین", noRes:"نتیجه‌ای پیدا نشد", zoneGeneric:"منطقه",
+      tSpecs:"مشخصات فنی", tEquip:"تجهیزات", tDraw:"نقشه‌ها",
+      kPow:"توان نامی", kVol:"ولتاژ نامی", kCur:"جریان نامی", kSpd:"دور موتور", kFrq:"فرکانس", kIp:"درجه حفاظت",
+      tabSpecs:"مشخصات", tabEquip:"تجهیزات", tabDraw:"نقشه و مدارک",
+      summ2:"خلاصه وضعیت", cmpl:"تکمیل اطلاعات", statusFull:"اطلاعات کامل", statusPart:"اطلاعات ناقص",
+      allParams:"همه پارامترها", usedEquip:"تجهیزات نصب‌شده", docsTitle:"نقشه‌ها و مدارک فنی",
+      techParams:"پارامترهای فنی", otherSpec:"سایر فایل‌های مشخصات (عکس، PDF، اکسل)",
+      eqCounts:"{0} مشخصه · {1} عکس · {2} فایل", noEquip:"هنوز تجهیزاتی ثبت نشده.", addEquip:"+ افزودن تجهیز",
+      eqPrompt:"نام تجهیز (مثلاً کنتاکتور، رله حرارتی، سافت‌استارتر):", drawTitle:"نقشه‌ها (عکس، PDF، اکسل)",
+      replace:"📷 جایگزینی عکس", delPhoto:"🗑 حذف عکس", delPlateQ:"عکس پلاک حذف شود؟",
+      noPlate:"📷 هنوز عکس پلاکی ثبت نشده", uploadPlate:"📷 بارگذاری عکس پلاک",
+      plateHint:"🔍 برای نمایش تمام‌صفحه و بزرگ‌نمایی روی عکس بزنید", plateAlt:"پلاک موتور",
+      big40:"حجم فایل بیشتر از ۴۰ مگابایت است", big40n:"«{0}» بزرگ‌تر از ۴۰ مگابایت است", saveFail:"ذخیرهٔ فایل ممکن نشد",
+      bigWarn:"«{0}» حجمش {1} مگابایت است. فایل‌های بزرگ برنامه را کند می‌کنند. بارگذاری شود؟",
+      noSpace:"فضای خالی این دستگاه برای ذخیرهٔ این فایل کافی نیست.",
+      stgTitle:"💾 حافظه", stgFiles:"فایل‌ها: {0} مصرف از {1}", stgLs:"عکس‌ها و تنظیمات: {0} از حدود {1}",
+      persistOn:"🔒 در برابر پاک شدن خودکار محافظت شده", persistOff:"⚠️ محافظت‌نشده. برای درخواست محافظت اینجا بزنید (نصب برنامه کمک می‌کند).",
+      renameBtn:"✏️ تغییر نام", delEq:"🗑 حذف تجهیز", desc:"توضیحات",
+      descPh:"یادداشت، محل نصب، وضعیت، اطلاعات تعمیرات...", techSpecs:"مشخصات فنی", photos:"عکس‌ها",
+      filesTitle:"فایل‌ها: PDF، نقشه، دفترچه راهنما", eqName:"نام تجهیز:", delEqQ:"«{0}» و همهٔ فایل‌هایش حذف شود؟",
+      paramName:"نام پارامتر:", value:"مقدار:", delRow:"این ردیف حذف شود؟", addParam:"+ افزودن پارامتر",
+      noFiles:"فایلی نیست", delFileQ:"«{0}» حذف شود؟", notFound:"فایل پیدا نشد",
+      reports:"گزارش‌ها", rMotors:"گزارش موتورها", rEquip:"گزارش تجهیزات",
+      rMotorsDesc:"همهٔ پارامترهای هر موتور به تفکیک تابلو، با جمع کل جریان و توان در انتها",
+      rEquipDesc:"هر موتور با تجهیزات، مشخصات و عکس‌هایش",
+      rPhotoMotor:"گزارش عکس موتورها", rPhotoMotorDesc:"عکس پلاک و مشخصات فنی همهٔ موتورها در یک فایل",
+      rPhotoEquip:"گزارش عکس تجهیزات", rPhotoEquipDesc:"عکس‌های تجهیزات همهٔ موتورها در یک فایل",
+      repPhotoMotorTitle:"{0} – گزارش عکس موتورها", repPhotoEquipTitle:"{0} – گزارش عکس تجهیزات",
+      repPrep:"در حال ساخت فایل… (با عکس‌های زیاد کمی طول می‌کشد)",
+      photosCount:"{0} عکس", photosNote:"فقط موتورهایی که عکس دارند نمایش داده می‌شوند. برای بزرگ‌نمایی روی عکس بزنید.",
+      noPhotosAll:"هنوز عکسی اینجا پیدا نشد.", thItem:"مورد",
+      repMotorsTitle:"{0} – گزارش موتورها", repEquipTitle:"{0} – گزارش تجهیزات",
+      thMotor:"موتور", thCur:"جریان (A)", thPow:"توان (kW)", totalMotors:"جمع کل",
+      noMotors:"هنوز موتوری اینجا نیست.",
+      motorsNote:"همهٔ پارامترهایی که برای موتورها وارد کرده‌اید نمایش داده می‌شود. فقط جریان (A) و توان (kW) در ردیف آخر جمع می‌شوند. مقدار خالی با «—» نشان داده می‌شود و در جمع نمی‌آید. برای دیدن همهٔ ستون‌ها جدول را به کنار بکشید.",
+      nEquip:"{0} تجهیز", noEquipReg:"تجهیزی ثبت نشده", specsPhotos:"{0} مشخصه · {1} عکس",
+      thParam:"پارامتر", thValue:"مقدار", noPhotos:"عکسی نیست", exportFail:"ساخت خروجی ناموفق بود", xPhotos:"عکس",
+      imported:"اطلاعات وارد شد", invalid:"فایل نامعتبر است",
+      resetQ:"همهٔ تغییرات، عکس‌ها و فایل‌ها پاک شود و اطلاعات پیش‌فرض برگردد؟ (رمزها و کاربران حفظ می‌شوند)",
+      ocrRead:"🔍 خوانده‌شده از عکس",
+      ocrNone:"پارامتر قابل‌خواندنی پیدا نشد. عکس واضح‌تر و از روبه‌رو، با نور یکنواخت و بدون انعکاس بگیرید یا مقادیر را دستی وارد کنید.",
+      ocrFilled:"ثبت‌شده:", ocrKept:"پیدا شد، اما مقدار قبلی شما حفظ شد:",
+      ocrTip:"خواندن خودکار ممکن است ارقام را اشتباه بخواند. لطفاً مقادیر را با پلاک مقایسه کنید و در صورت نیاز با ✏️ اصلاح کنید.",
+      ocrHp:"توان از HP/CV به kW تبدیل شد.", ok:"تأیید",
+      ocrReading:"🔍 در حال خواندن عکس…", ocrPct:"🔍 در حال خواندن عکس… {0}%",
+      ocrFail:"خواندن عکس ممکن نشد. خواندن متن بار اول به اینترنت نیاز دارد. خود عکس ذخیره شد."
+    }
+  };
+  let LANG = "fa";
+  const t = (k, ...a) => {
+    let s = (T[LANG] && T[LANG][k]) || T.en[k] || k;
+    a.forEach((v, i) => { s = s.split("{" + i + "}").join(v); });
+    return s;
+  };
+  const isRTL = () => LANG === "fa";
+  const specLabel = k => (LANG === "fa" && SPEC_FA[k]) ? SPEC_FA[k] : k;
+  const lvlName = d => d >= 0 && d <= 3 ? t("lvl" + d) : "Item";
+
+  /* ===== Default data (same for every zone) ===== */
+  const mk = (name, kids=[], pid="") => {
+    const id = pid ? pid + "/" + name : name;
+    return {id, name, children: kids.map(k => mk(k[0], k[1]||[], id))};
+  };
+  const ROOMS = [
+    ["C01",          [["MCS04"]]],
+    ["E01",          [["MCS01", [["G85WPU01"]]], ["MCS02"], ["MCS03"]]],
+    ["LIM",          [["LCP15"],["LCP16"],["LCP17"]]],
+    ["Chemical",     [["LCP01"]]],
+    ["Filter Press", [["LCP02"]]],
+    ["RO",           [["REM 1"]]],
+  ];
+  const seed = () => ["ASP","RWTP","WTP","CAP"].map(z => mk(z, ROOMS));
+
+  /* ===== Storage ===== */
+  const $ = id => document.getElementById(id);
+  const save = (k,v)=>{ try{ localStorage.setItem(k,v); syncMark(k, 1); return true; }catch(e){ alert(t("storageFull")); return false; } };
+  const load = k => { try{ return localStorage.getItem(k); }catch(e){ return null; } };
+  const del  = k => { try{ localStorage.removeItem(k); syncMark(k, 0); }catch(e){} };
+
+  /* ===== Cloud sync (Supabase) — shared data between phones =====
+     Leave SB_URL / SB_KEY empty = app works exactly as before (local only). */
+  const SB_URL = "https://qneysphxlsficlxqqgut.supabase.co";   // e.g. "https://abcdxyz.supabase.co"
+  const SB_KEY = "sb_publishable_fSM7jdbpfYe0Ohd34d670A_7-sUBrRK";   // the "anon public" key
+  const SB_ON = !!(SB_URL && SB_KEY);
+  const SYNC_KEYS = ["tree","deleted","users","texts","ownername","pinhash","themedefault"];
+  const isSyncKey = k => SYNC_KEYS.includes(k) || k.startsWith("img_");
+  const lsGet = k => { try{ return localStorage.getItem(k); }catch(e){ return null; } };
+  const lsSet = (k,v) => { try{ localStorage.setItem(k,v); return true; }catch(e){ return false; } };
+  const jget = (k, d) => { try{ const v = JSON.parse(lsGet(k)); return v == null ? d : v; }catch(e){ return d; } };
+  let syncDirty = jget("sync_dirty", {});     // key -> 1 (upload) / 0 (delete)
+  let syncQ = jget("sync_q", []);             // file ops: {o:"put"|"del", id}
+  let nodeHash = jget("sync_nh", {});
+  let syncing = false, syncTimer = null, syncErr = "";
+  const persistSync = () => { lsSet("sync_dirty", JSON.stringify(syncDirty)); lsSet("sync_q", JSON.stringify(syncQ)); };
+  function syncMark(k, up){
+    if (!SB_ON || !isSyncKey(k)) return;
+    syncDirty[k] = up ? 1 : 0; persistSync(); syncSoon();
+  }
+  function syncSoon(){ if (!SB_ON) return; clearTimeout(syncTimer); syncTimer = setTimeout(syncAll, 1500); }
+  const sbH = (extra) => Object.assign({apikey: SB_KEY}, SB_KEY.startsWith("eyJ") ? {Authorization: "Bearer " + SB_KEY} : {}, extra || {});
+
+  /* ----- per-node timestamps (so the newest edit wins when merging) ----- */
+  const strHash = s => { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return h; };
+  function isPristine(n){
+    return !(n.equip && n.equip.length) && !(n.specFiles && n.specFiles.length) && !(n.drawFiles && n.drawFiles.length)
+      && !n.plate && (!n.specs || n.specs.every(s => !s.v));
+  }
+  function nodeSig(n){
+    const c = Object.assign({}, n); delete c.children; delete c._t;
+    if (!c.specs || c.specs.every(s => !s.v)){ delete c.specs; delete c.pfAdded; }
+    ["equip","specFiles","drawFiles"].forEach(k => { if (!c[k] || !c[k].length) delete c[k]; });
+    if (!c.plate) delete c.plate;
+    return strHash(JSON.stringify(c));
+  }
+  function stampTree(){
+    const go = list => list.forEach(n => {
+      const h = nodeSig(n);
+      if (n._t == null){ n._t = isPristine(n) ? 0 : 1; }
+      else if (nodeHash[n.id] != null && nodeHash[n.id] !== h){ n._t = Date.now(); }
+      nodeHash[n.id] = h;
+      go(n.children || []);
+    });
+    go(tree);
+    lsSet("sync_nh", JSON.stringify(nodeHash));
+  }
+  function pickNode(x, y){
+    const tx = x._t || 0, ty = y._t || 0;
+    if (tx !== ty) return tx > ty ? x : y;
+    if (isPristine(x) && !isPristine(y)) return y;
+    return x;
+  }
+  function mergeList(a, b, del){
+    const out = [], seen = new Set(), bm = new Map((b || []).map(n => [n.id, n]));
+    for (const x of (a || [])){
+      if (del.has(x.id)) continue;
+      seen.add(x.id);
+      const y = bm.get(x.id);
+      if (!y){ out.push(x); continue; }
+      const m = Object.assign({}, pickNode(x, y));
+      m.children = mergeList(x.children, y.children, del);
+      out.push(m);
+    }
+    for (const y of (b || [])) if (!seen.has(y.id) && !del.has(y.id)) out.push(y);
+    return out;
+  }
+
+  const canonVal = v => JSON.stringify(v, (k, x) => (x && typeof x === "object" && !Array.isArray(x))
+    ? Object.keys(x).sort().reduce((o, kk) => (o[kk] = x[kk], o), {}) : x);
+  const canonTree = list => (list || []).map(n => Object.assign({}, n, {children: canonTree(n.children)})).sort((a, b) => a.id < b.id ? -1 : 1);
+  const sameTree = (a, b) => canonVal(canonTree(a)) === canonVal(canonTree(b));
+
+  /* ----- applying data that came from the cloud ----- */
+  let syncChanged = false;
+  function applyRemote(key, val){
+    if (key === "tree"){
+      let r; try{ r = JSON.parse(val); }catch(e){ return; }
+      if (!Array.isArray(r)) return;
+      const m = mergeList(tree, r, new Set(deleted));
+      if (!sameTree(m, tree)){ tree = m; syncChanged = true; }
+      stampTree(); lsSet("tree", JSON.stringify(tree));
+      if (!sameTree(m, r)) syncDirty.tree = 1;   // we have something the cloud lacks
+    } else if (key === "deleted"){
+      let r; try{ r = JSON.parse(val); }catch(e){ return; }
+      if (!Array.isArray(r)) return;
+      const u = [...new Set([...deleted, ...r])];
+      if (u.length !== deleted.length){ deleted = u; syncChanged = true; lsSet("deleted", JSON.stringify(deleted)); }
+      if (u.length !== r.length) syncDirty.deleted = 1;
+      deleted.forEach(id => { ["img_","img_zh_"].forEach(p => { if (lsGet(p + id) != null){ try{ localStorage.removeItem(p + id); }catch(e){} } }); });
+      const rm = list => list.filter(n => !deleted.includes(n.id)).map(n => (n.children = rm(n.children || []), n));
+      tree = rm(tree); lsSet("tree", JSON.stringify(tree));
+    } else {
+      if (syncDirty[key] === 1) return;        // our own newer change is waiting to upload
+      if (lsGet(key) === val) return;
+      if (!lsSet(key, val)) return;
+      syncChanged = true;
+      if (key === "users"){ try{ users = JSON.parse(val) || []; }catch(e){} }
+      if (key === "texts"){ try{ texts = JSON.parse(val) || {}; }catch(e){} }
+    }
+  }
+
+  async function sbPull(){
+    const since = lsGet("sync_since") || "1970-01-01T00:00:00Z";
+    const r = await fetch(SB_URL + "/rest/v1/kv?select=key,value,updated_at&order=updated_at.asc&updated_at=gt." + encodeURIComponent(since), {headers: sbH()});
+    if (!r.ok) throw new Error("pull " + r.status);
+    const rows = await r.json();
+    // apply "deleted" first, then the tree
+    rows.sort((a, b) => (a.key === "deleted" ? -1 : 0) - (b.key === "deleted" ? -1 : 0));
+    let last = since;
+    for (const row of rows){
+      if (isSyncKey(row.key)) applyRemote(row.key, row.value);
+      if (row.updated_at > last) last = row.updated_at;
+    }
+    lsSet("sync_since", last);
+    return rows;
+  }
+  async function sbPushKeys(){
+    const up = [], dels = [];
+    for (const k of Object.keys(syncDirty)){
+      if (syncDirty[k] === 1){ const v = lsGet(k); if (v != null) up.push({key: k, value: v}); }
+      else dels.push(k);
+    }
+    for (let i = 0; i < up.length; i += 5){
+      const part = up.slice(i, i + 5);
+      const r = await fetch(SB_URL + "/rest/v1/kv?on_conflict=key", {method: "POST",
+        headers: sbH({"Content-Type": "application/json", Prefer: "resolution=merge-duplicates,return=minimal"}), body: JSON.stringify(part)});
+      if (!r.ok) throw new Error("push " + r.status);
+      part.forEach(p => { if (syncDirty[p.key] === 1 && lsGet(p.key) === p.value) delete syncDirty[p.key]; });
+      persistSync();
+    }
+    for (const k of dels){
+      const r = await fetch(SB_URL + "/rest/v1/kv?key=eq." + encodeURIComponent(k), {method: "DELETE", headers: sbH()});
+      if (!r.ok) throw new Error("del " + r.status);
+      if (syncDirty[k] === 0) delete syncDirty[k];
+      persistSync();
+    }
+  }
+  async function sbBlobs(){
+    while (syncQ.length){
+      const op = syncQ[0], u = SB_URL + "/storage/v1/object/files/" + encodeURIComponent(op.id);
+      if (op.o === "put"){
+        const b = await rawGet(op.id);
+        if (b){
+          const r = await fetch(u, {method: "POST", headers: sbH({"x-upsert": "true", "Content-Type": b.type || "application/octet-stream"}), body: b});
+          if (!r.ok) throw new Error("upload " + r.status);
+        }
+      } else {
+        const r = await fetch(u, {method: "DELETE", headers: sbH()});
+        if (!r.ok && r.status !== 404 && r.status !== 400) throw new Error("rm " + r.status);
+      }
+      syncQ.shift(); persistSync();
+    }
+  }
+  function qBlob(o, id){
+    if (!SB_ON) return;
+    syncQ = syncQ.filter(x => x.id !== id);
+    syncQ.push({o, id}); persistSync(); syncSoon();
+  }
+  /* first run on this phone: upload what the cloud does not have yet */
+  async function syncInit(rows){
+    const have = new Set(rows.map(r => r.key));
+    ["tree","deleted"].forEach(k => { if (lsGet(k) != null) syncDirty[k] = 1; });
+    for (let i = 0; i < localStorage.length; i++){
+      const k = localStorage.key(i);
+      if (isSyncKey(k) && !have.has(k) && lsGet(k) != null) syncDirty[k] = 1;
+    }
+    let names = new Set();
+    try{
+      const r = await fetch(SB_URL + "/storage/v1/object/list/files", {method: "POST",
+        headers: sbH({"Content-Type": "application/json"}), body: JSON.stringify({prefix: "", limit: 10000})});
+      if (r.ok) names = new Set((await r.json()).map(o => o.name));
+    }catch(e){}
+    for (const id of await dbKeys()) if (!names.has(id) && !syncQ.some(x => x.id === id)) syncQ.push({o: "put", id});
+    persistSync();
+    lsSet("sync_init", "1");
+  }
+  async function syncAll(){
+    if (!SB_ON || syncing || !navigator.onLine) return;
+    syncing = true;
+    try{
+      syncChanged = false;
+      const first = !lsGet("sync_init");
+      const rows = await sbPull();
+      if (first) await syncInit(rows);
+      persistSync();
+      await sbPushKeys();
+      await sbBlobs();
+      syncErr = "";
+      if (syncChanged) { syncChanged = false; try{ render(); }catch(e){} }
+    }catch(e){ syncErr = String(e && e.message || e); }
+    syncing = false;
+  }
+  function syncStart(){
+    if (!SB_ON) return;
+    syncAll();
+    window.addEventListener("online", syncAll);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) syncAll(); });
+    setInterval(() => { if (!document.hidden) syncAll(); }, 60000);
+  }
+  function syncPublicUrl(id){ return SB_URL + "/storage/v1/object/public/files/" + encodeURIComponent(id); }
+  async function syncNowUI(){
+    if (!SB_ON){ alert("Cloud sync is not configured."); return; }
+    if (!navigator.onLine){ alert("No internet connection."); return; }
+    toast("Syncing…", 2000);
+    while (syncing) await new Promise(r => setTimeout(r, 200));
+    await syncAll();
+    toast(syncErr ? "Sync failed: " + syncErr : "✓ Synced", 4000);
+  }
+
+  LANG = load("lang") === "en" ? "en" : "fa";
+
+  let tree, deleted = [], users = [], texts = {}, remote = {};
+  try { tree = JSON.parse(load("tree")); } catch(e){}
+  try { deleted = JSON.parse(load("deleted")) || []; } catch(e){}
+  try { users = JSON.parse(load("users")) || []; } catch(e){}
+  try { texts = JSON.parse(load("texts")) || {}; } catch(e){}
+  try { remote = JSON.parse(load("remotecfg")) || {}; } catch(e){}
+  if (!Array.isArray(tree)) tree = [];
+  if (!Array.isArray(deleted)) deleted = [];
+  if (!Array.isArray(users)) users = [];
+  if (!texts || typeof texts !== "object") texts = {};
+  if (!remote || typeof remote !== "object") remote = {};
+  const saveTree = () => { if (SB_ON) stampTree(); save("tree", JSON.stringify(tree)); };
+  const saveDeleted = () => save("deleted", JSON.stringify(deleted));
+  const saveUsers = () => save("users", JSON.stringify(users));
+  const saveTexts = () => save("texts", JSON.stringify(texts));
+
+  function merge(stored, sd){
+    sd.forEach(s => {
+      const f = stored.find(n => n.id === s.id);
+      if (!f){ if (!deleted.includes(s.id)) stored.push(s); }
+      else merge(f.children, s.children);
+    });
+  }
+  merge(tree, seed());
+  saveTree();
+
+  /* ===== Storage usage, permanent storage and big-file protection ===== */
+  const fmtBytes = b => b >= 1073741824 ? (b/1073741824).toFixed(1) + " GB"
+    : b >= 1048576 ? (b/1048576).toFixed(1) + " MB" : Math.max(1, Math.round(b/1024)) + " KB";
+  function lsBytes(){
+    let n = 0;
+    try{
+      for (let i = 0; i < localStorage.length; i++){
+        const k = localStorage.key(i);
+        n += (k.length + (localStorage.getItem(k) || "").length) * 2;
+      }
+    }catch(e){}
+    return n;
+  }
+  async function storageInfo(){
+    let usage = null, quota = null, persisted = null;
+    try{ if (navigator.storage && navigator.storage.estimate){ const e = await navigator.storage.estimate(); usage = e.usage; quota = e.quota; } }catch(e){}
+    try{ if (navigator.storage && navigator.storage.persisted) persisted = await navigator.storage.persisted(); }catch(e){}
+    return {usage, quota, persisted, ls: lsBytes()};
+  }
+  async function spaceOK(bytes){
+    const s = await storageInfo();
+    if (s.quota == null || s.usage == null) return true;
+    return (s.quota - s.usage) > bytes * 1.5 + 20 * 1048576;
+  }
+  /* checks size limit, asks before big files, checks free space */
+  async function okToStore(file){
+    if (file.size > MAX_FILE){ alert(t("big40n", file.name)); return false; }
+    if (file.size > WARN_FILE && !confirm(t("bigWarn", file.name, (file.size / 1048576).toFixed(1)))) return false;
+    if (!(await spaceOK(file.size))){ alert(t("noSpace")); return false; }
+    return true;
+  }
+  function askPersist(){
+    try{
+      if (navigator.storage && navigator.storage.persist && navigator.storage.persisted)
+        navigator.storage.persisted().then(p => { if (!p) navigator.storage.persist(); });
+    }catch(e){}
+  }
+
+  /* ===== Editable texts (admin) + theme ===== */
+  /* local edits (admin's device) win; otherwise the texts from config.json (downloaded when online) are used */
+  const gv = (o, ...p) => p.reduce((a, k) => (a && a[k] != null ? a[k] : undefined), o);
+  const ovr = (...p) => {
+    const a = gv(texts, ...p);
+    if (a != null && a !== "") return a;
+    const b = gv(remote.texts || {}, ...p);
+    return (b != null && b !== "") ? b : null;
+  };
+  const tx = k => { const v = ovr(LANG, k); return v != null ? v : t(k); };
+  function setTxt(v, ...p){
+    let o = texts;
+    p.slice(0, -1).forEach(k => { o = o[k] = o[k] || {}; });
+    o[p[p.length - 1]] = v;
+    saveTexts();
+  }
+  function zoneNames(n){
+    const meta = ZONE_META[n.name];
+    const base = (meta && meta[LANG]) || [n.name, t("zoneGeneric")];
+    const o = ovr("zones", n.id, LANG);
+    return Array.isArray(o) ? [o[0] || base[0], o[1] || base[1]] : base;
+  }
+
+  function curTheme(){
+    const k = load("theme") || load("themedefault") || remote.theme || "blue";
+    return THEMES[k] ? k : "blue";
+  }
+  function applyTheme(){
+    const v = THEMES[curTheme()].v, s = document.documentElement.style;
+    Object.entries(v).forEach(([a, b]) => s.setProperty("--" + a, b));
+    const m = document.querySelector('meta[name="theme-color"]');
+    if (m) m.setAttribute("content", v.mid);
+  }
+  /* download config.json (default theme + texts) when online; works if the file sits next to the app */
+  async function pullRemote(){
+    if (!navigator.onLine) return;
+    try{
+      const r = await fetch("config.json?v=" + Date.now(), {cache:"no-store"});
+      if (!r.ok) return;
+      const c = await r.json();
+      if (!c || typeof c !== "object") return;
+      const s = JSON.stringify(c);
+      if (s === load("remotecfg")) return;
+      save("remotecfg", s);
+      remote = c;
+      applyTheme();
+      render();
+    }catch(e){}
+  }
+  window.addEventListener("online", pullRemote);
+
+  function applyLang(){
+    document.documentElement.dir = isRTL() ? "rtl" : "ltr";
+    document.documentElement.lang = LANG;
+    $("q").placeholder = t("search");
+    document.querySelector(".pill").textContent = t("adminPill");
+    $("heroBtn").title = t("hdrPhoto");
+  }
+  function setLang(c){
+    LANG = c === "en" ? "en" : "fa";
+    save("lang", LANG);
+    applyLang();
+    closeMenu();
+    render();
+  }
+
+  /* ===== Accounts (login from the ☰ menu) =====
+     Only the admin can edit. Other accounts are view-only (the admin can also allow them to use the reports). */
+  async function sha(s){
+    try{
+      const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("ws:" + s));
+      return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2,"0")).join("");
+    }catch(e){ return "p:" + s; }
+  }
+  async function checkPin(p){
+    const h = load("pinhash");
+    return h ? (await sha(p)) === h : p === DEFAULT_PIN;
+  }
+  const ownerName = () => load("ownername") || OWNER_USER;
+  /* me = {u, edit, owner, rep} or null.  "admin" (global) = the logged-in account is the admin */
+  let me = null;
+  function findAccount(u){
+    const ul = String(u || "").toLowerCase();
+    if (ul === ownerName().toLowerCase()) return {u:ownerName(), edit:true, owner:true, rep:true};
+    const x = users.find(z => z.u.toLowerCase() === ul);
+    return x ? {u:x.u, edit:false, owner:false, rep:!!x.rep} : null;
+  }
+  async function login(){
+    const u = (prompt(t("userPrompt")) || "").trim();
+    if (!u) return;
+    const p = prompt(t("pwPrompt"));
+    if (p === null) return;
+    const ul = u.toLowerCase();
+    let ok = false;
+    if (ul === ownerName().toLowerCase()) ok = await checkPin(p);
+    else {
+      const x = users.find(z => z.u.toLowerCase() === ul);
+      ok = !!x && (await sha(p)) === x.h;
+    }
+    if (!ok){ alert(t("wrongLogin")); return; }
+    setSession(findAccount(u));
+    if (me && me.owner){
+      if (!load("rechash")) newRecovery();
+      else if (!load("pinhash")) toast(t("defPw"), 7000);
+    }
+  }
+  function setSession(m){
+    me = m;
+    admin = !!(m && m.owner);
+    document.body.classList.toggle("admin", admin);
+    if (m) save("session", m.u); else del("session");
+    render();
+  }
+  function logout(){
+    path = []; eqOpen = null; rep = null;
+    history.pushState({p:[], e:null, r:null}, "");
+    setSession(null);
+    window.scrollTo(0,0);
+  }
+  const canEnter = () => !REQUIRE_LOGIN || !!me;
+  const canReport = () => !!me && (me.owner || me.rep);
+
+  /* ----- recovery code (admin) + forgot password ----- */
+  async function newRecovery(){
+    const a = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789", r = new Uint8Array(12);
+    crypto.getRandomValues(r);
+    const raw = [...r].map(x => a[x % a.length]).join("");
+    save("rechash", await sha("rec:" + raw));
+    showCode(raw.replace(/(.{4})(?=.)/g, "$1-"));
+  }
+  function showCode(code){
+    const b = $("modBox");
+    b.innerHTML = "";
+    const hh = document.createElement("h3"); hh.textContent = t("recTitle"); b.appendChild(hh);
+    const c = document.createElement("div"); c.className = "code"; c.textContent = code; b.appendChild(c);
+    const tip = document.createElement("div"); tip.className = "tip"; tip.textContent = t("recTip"); b.appendChild(tip);
+    const ok = document.createElement("div"); ok.className = "ok"; ok.textContent = t("ok");
+    ok.onclick = () => { $("mod").style.display = "none"; };
+    b.appendChild(ok);
+    $("mod").style.display = "grid";
+  }
+  async function forgot(){
+    const u = (prompt(t("userPrompt")) || "").trim();
+    if (!u) return;
+    if (u.toLowerCase() !== ownerName().toLowerCase()){ alert(t("askAdmin")); return; }
+    const rh = load("rechash");
+    if (!rh){ alert(t("noRec")); return; }
+    const c = prompt(t("recPrompt"));
+    if (c === null) return;
+    if ((await sha("rec:" + c.toUpperCase().replace(/[^A-Z0-9]/g, ""))) !== rh){ alert(t("recWrong")); return; }
+    const a = prompt(t("newPw"));
+    if (a === null) return;
+    if (a.length < 4){ alert(t("pwShort")); return; }
+    const b = prompt(t("repPw"));
+    if (b !== a){ alert(t("pwMismatch")); return; }
+    save("pinhash", await sha(a));
+    alert(t("pwChanged"));
+  }
+  function changeOwnerName(){
+    if (!me || !me.owner) return;
+    const n = (prompt(t("newUserName"), ownerName()) || "").trim();
+    if (!n) return;
+    if (users.some(z => z.u.toLowerCase() === n.toLowerCase())){ alert(t("userExists")); return; }
+    save("ownername", n);
+    me.u = n; save("session", n);
+    alert(t("userChanged"));
+    render();
+  }
+
+  /* ===== File storage (IndexedDB) ===== */
+  const dbp = new Promise((res,rej)=>{
+    const r = indexedDB.open("wsfiles",1);
+    r.onupgradeneeded = () => r.result.createObjectStore("f");
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+  const tx_db = (mode, fn) => dbp.then(db => new Promise((res,rej)=>{
+    const t = db.transaction("f", mode), q = fn(t.objectStore("f"));
+    t.oncomplete = () => res(q && q.result);
+    t.onerror = () => rej(t.error);
+  }));
+  const rawPut = (id,b) => tx_db("readwrite", s => s.put(b,id));
+  const rawGet = id => tx_db("readonly", s => s.get(id));
+  const rawDel = id => tx_db("readwrite", s => s.delete(id));
+  const dbPut = async (id,b) => { await rawPut(id,b); qBlob("put", id); };
+  const dbDel = async id => { await rawDel(id); qBlob("del", id); };
+  /* local first; if the file is not on this phone yet, download it from the cloud and keep a copy */
+  const dbGet = async id => {
+    let b = await rawGet(id);
+    if (!b && SB_ON && navigator.onLine){
+      try{
+        const r = await fetch(syncPublicUrl(id));
+        if (r.ok){ b = await r.blob(); await rawPut(id, b); }
+      }catch(e){}
+    }
+    return b;
+  };
+  const dbKeys = () => tx_db("readonly", s => s.getAllKeys());
+  const dbClear = () => tx_db("readwrite", s => s.clear());
+
+  let path = [], admin = false, target = null, tab = "specs", detailId = null, eqOpen = null, rep = null;
+  const GRAD = "linear-gradient(160deg,color-mix(in srgb,var(--blue) 88%,transparent),color-mix(in srgb,var(--mid) 92%,transparent))";
+  let uidN = 0;
+  const uid = () => "n" + Date.now().toString(36) + (uidN++).toString(36) + Math.random().toString(36).slice(2,5);
+
+  /* restore the saved login */
+  (function(){
+    const s = load("session");
+    const m = s ? findAccount(s) : null;
+    if (m){
+      me = m; admin = !!m.owner;
+      document.body.classList.toggle("admin", admin);
+    } else del("session");
+  })();
+
+  /* ===== Tree navigation ===== */
+  function walk(){
+    let list = tree, node = null, valid = [];
+    for (const id of path){
+      const f = list.find(n => n.id === id);
+      if (!f) break;
+      node = f; list = f.children; valid.push(id);
+    }
+    path = valid;
+    return {node, list};
+  }
+  function crumbArr(){
+    let list = tree, names = [];
+    for (const id of path){
+      const f = list.find(n => n.id === id);
+      if (!f) break;
+      names.push(f.name); list = f.children;
+    }
+    return names;
+  }
+  function crumbs(){ return crumbArr().join("  ›  "); }
+  function ensure(n){
+    if (!n.specs) n.specs = DEFAULT_SPECS.map(k => ({k, v:""}));
+    else if (!n.pfAdded){
+      n.pfAdded = true;
+      if (!n.specs.some(s => /power factor|cos|ضریب/i.test(s.k)))
+        n.specs.push({k:"Power factor (cos φ)", v:""});
+    }
+    n.equip = n.equip || [];
+    n.specFiles = n.specFiles || [];
+    n.drawFiles = n.drawFiles || [];
+    n.plate = n.plate || null;
+    n.equip.forEach(ensureEq);
+  }
+  function ensureEq(q){
+    q.desc = q.desc || "";
+    q.specs = q.specs || [];
+    q.photos = q.photos || [];
+    q.files = q.files || [];
+  }
+  function goInto(n){
+    if (!canEnter()){ toast(t("needLogin"), 3500); return; }
+    path.push(n.id); eqOpen = null; rep = null;
+    history.pushState({p:[...path], e:null, r:null}, "");
+    render(); window.scrollTo(0,0);
+  }
+  function goTo(ids){
+    if (!canEnter()){ toast(t("needLogin"), 3500); return; }
+    path = [...ids]; eqOpen = null; rep = null;
+    history.pushState({p:[...path], e:null, r:null}, "");
+    render(); window.scrollTo(0,0);
+  }
+
+  /* ===== Menu ===== */
+  function openMenu(){ renderMenu(); document.body.classList.add("menu-open"); }
+  function closeMenu(){ document.body.classList.remove("menu-open"); }
+  $("ov").onclick = closeMenu;
+  $("menuBtn2").onclick = openMenu;
+
+  /* storage usage card (admin) */
+  function addStorageInfo(d){
+    const sg = document.createElement("div");
+    sg.className = "mi info";
+    sg.textContent = t("stgTitle") + " …";
+    d.appendChild(sg);
+    storageInfo().then(s => {
+      const lines = [t("stgTitle")];
+      let warn = false;
+      if (s.usage != null && s.quota != null){
+        lines.push(t("stgFiles", fmtBytes(s.usage), fmtBytes(s.quota)));
+        if (s.usage / s.quota > 0.8) warn = true;
+      }
+      lines.push(t("stgLs", fmtBytes(s.ls), fmtBytes(LS_LIMIT)));
+      if (s.ls / LS_LIMIT > 0.8) warn = true;
+      if (s.persisted === true) lines.push(t("persistOn"));
+      else if (s.persisted === false) lines.push(t("persistOff"));
+      sg.textContent = lines.join("\n");
+      sg.classList.toggle("warnc", warn);
+    });
+    sg.onclick = () => { askPersist(); setTimeout(() => { if (document.body.classList.contains("menu-open")) renderMenu(); }, 700); };
+  }
+
+  function renderMenu(){
+    const d = $("drawer");
+    d.innerHTML = "";
+    const h = document.createElement("h2"); h.textContent = t("menu");
+    const st = document.createElement("div");
+    st.className = "st" + (admin ? " on" : "");
+    st.textContent = me
+      ? t("loggedAs", me.u) + " · " + (me.owner ? t("ownerTag") : t("viewTag") + (me.rep ? " · " + t("repTag") : ""))
+      : t("viewOnly");
+    d.append(h, st);
+
+    /* language picker (everyone can use it) */
+    const ll = document.createElement("div");
+    ll.className = "langlab"; ll.textContent = t("lang");
+    const lr = document.createElement("div");
+    lr.className = "langrow";
+    [["en","English"],["fa","فارسی"]].forEach(([c, n]) => {
+      const b = document.createElement("div");
+      b.className = "lg" + (LANG === c ? " on" : "");
+      b.textContent = n;
+      b.onclick = () => setLang(c);
+      lr.appendChild(b);
+    });
+    d.append(ll, lr);
+
+    /* theme picker (everyone can use it) */
+    const tl = document.createElement("div");
+    tl.className = "langlab"; tl.textContent = t("theme");
+    const tr_ = document.createElement("div");
+    tr_.className = "themerow";
+    Object.entries(THEMES).forEach(([k, th]) => {
+      const c = document.createElement("div");
+      c.className = "thc" + (curTheme() === k ? " on" : "");
+      c.style.background = th.v.blue;
+      c.title = th[LANG];
+      c.onclick = () => { save("theme", k); applyTheme(); renderMenu(); };
+      tr_.appendChild(c);
+    });
+    const rs = document.createElement("div");
+    rs.className = "thc rs"; rs.textContent = "↺"; rs.title = t("themeReset");
+    rs.onclick = () => { del("theme"); applyTheme(); renderMenu(); };
+    tr_.appendChild(rs);
+    d.append(tl, tr_);
+
+    const item = (txt, fn, cls="") => {
+      const e = document.createElement("div");
+      e.className = "mi " + cls; e.textContent = txt;
+      e.onclick = fn; d.appendChild(e);
+    };
+
+    if (SB_ON) item("🔄 Sync now", () => { closeMenu(); syncNowUI(); });
+    if (!me){
+      item(t("login"), () => { closeMenu(); login(); }, "login");
+      item(t("forgot"), () => { closeMenu(); forgot(); });
+    } else {
+      if (me.owner) addStorageInfo(d);
+      item(t("chgPw"), async () => {
+        closeMenu();
+        const a = prompt(t("newPw"));
+        if (a === null) return;
+        if (a.length < 4){ alert(t("pwShort")); return; }
+        const b = prompt(t("repPw"));
+        if (b !== a){ alert(t("pwMismatch")); return; }
+        const hh = await sha(a);
+        if (me.owner) save("pinhash", hh);
+        else {
+          const x = users.find(z => z.u.toLowerCase() === me.u.toLowerCase());
+          if (x){ x.h = hh; saveUsers(); }
+        }
+        alert(t("pwChanged"));
+      });
+      if (me.owner){
+        item(t("chgUser"), () => { closeMenu(); changeOwnerName(); });
+        item(t("recCode"), () => { closeMenu(); if (confirm(t("recGen"))) newRecovery(); });
+        item(t("manageUsers"), () => { closeMenu(); showUsers(); });
+        item(t("themeDefaultSet"), () => { closeMenu(); save("themedefault", curTheme()); toast(t("themeDefaultOk"), 7000); });
+        item(t("exportCfg"), () => { closeMenu(); exportCfg(); });
+        item(t("exportData"), () => { closeMenu(); doExport(); });
+        item(t("importData"), () => { closeMenu(); $("imp").click(); });
+        item(t("resetData"), () => { closeMenu(); doReset(); }, "red");
+      }
+      item(t("logout"), () => { closeMenu(); logout(); }, "out");
+    }
+  }
+
+  /* ===== User management (admin only) ===== */
+  function showUsers(){
+    if (!me || !me.owner) return;
+    const b = $("modBox");
+    b.innerHTML = "";
+    const hh = document.createElement("h3"); hh.textContent = t("usersTitle"); b.appendChild(hh);
+    if (!users.length){
+      const p = document.createElement("div"); p.className = "tip"; p.textContent = t("noUsers"); b.appendChild(p);
+    } else {
+      users.forEach(x => {
+        const r = document.createElement("div"); r.className = "urow";
+        const n = document.createElement("span"); n.className = "un"; n.textContent = "👤 " + x.u;
+        const tg = document.createElement("span");
+        tg.className = "ut" + (x.rep ? " e" : "");
+        tg.textContent = x.rep ? t("repTag") : t("noRepTag");
+        tg.onclick = () => { x.rep = !x.rep; saveUsers(); showUsers(); };
+        const rn = document.createElement("span"); rn.className = "ud"; rn.textContent = "✏️";
+        rn.onclick = () => {
+          const nn = (prompt(t("newUserName"), x.u) || "").trim();
+          if (!nn || nn === x.u) return;
+          if (nn.toLowerCase() === ownerName().toLowerCase() || users.some(z => z !== x && z.u.toLowerCase() === nn.toLowerCase())){
+            alert(t("userExists")); return;
+          }
+          x.u = nn; saveUsers(); showUsers();
+        };
+        const pw = document.createElement("span"); pw.className = "ud"; pw.textContent = "🔑";
+        pw.onclick = async () => {
+          const p = prompt(t("resetPw", x.u));
+          if (p === null) return;
+          if (p.length < 4){ alert(t("pwShort")); return; }
+          x.h = await sha(p); saveUsers(); alert(t("pwChanged"));
+        };
+        const dl_ = document.createElement("span"); dl_.className = "ud"; dl_.textContent = "🗑";
+        dl_.onclick = () => {
+          if (!confirm(t("delUserQ", x.u))) return;
+          users.splice(users.indexOf(x), 1); saveUsers(); showUsers();
+        };
+        r.append(n, tg, rn, pw, dl_); b.appendChild(r);
+      });
+      const tip = document.createElement("div"); tip.className = "tip"; tip.textContent = t("userHint"); b.appendChild(tip);
+    }
+    const add = document.createElement("div"); add.className = "ok"; add.textContent = t("addUser");
+    add.onclick = async () => {
+      const u = (prompt(t("newUser")) || "").trim();
+      if (!u) return;
+      if (u.toLowerCase() === ownerName().toLowerCase()){ alert(t("userReserved")); return; }
+      if (users.some(z => z.u.toLowerCase() === u.toLowerCase())){ alert(t("userExists")); return; }
+      const p = prompt(t("newUserPw"));
+      if (p === null) return;
+      if (p.length < 4){ alert(t("pwShort")); return; }
+      const rp = confirm(t("canRep"));
+      users.push({u, h: await sha(p), rep: rp});
+      saveUsers(); showUsers();
+    };
+    const cl = document.createElement("div"); cl.className = "ok alt"; cl.textContent = t("close");
+    cl.onclick = () => { $("mod").style.display = "none"; };
+    b.append(add, cl);
+    $("mod").style.display = "grid";
+  }
+
+  /* ===== Main render ===== */
+  const REP_TITLES = {menu:"reports", motors:"rMotors", equip:"rEquip", pmotor:"rPhotoMotor", pequip:"rPhotoEquip"};
+  const repTitle = k => t(REP_TITLES[k] || "reports");
+  /* reports are available in zones, electrical rooms and panels (admin + users the admin allowed) */
+  const repAvail = (depth, node) => !!node && canReport() && depth >= 1 && depth <= 3;
+
+  function render(){
+    /* not allowed inside? go back to the home dashboard */
+    if (!canEnter() && path.length){ path = []; eqOpen = null; rep = null; }
+    const {node, list} = walk();
+    const depth = path.length;
+    const root = depth === 0;
+    const inRep = !!rep && repAvail(depth, node);
+    if (!inRep) rep = null;
+    const zoneMode = depth === 1 && !inRep;     // zone dashboard (photo header + motor stats)
+    const isDetail = depth >= MOTOR_DEPTH;
+
+    let eq = null;
+    if (isDetail){
+      ensure(node);
+      eq = node.equip.find(x => x.id === eqOpen) || null;
+      if (!eq) eqOpen = null;
+    }
+    const motorMain = isDetail && !eq;          // the new motor page has its own header
+
+    $("app").classList.toggle("root", root || zoneMode);
+    $("app").classList.toggle("motor", motorMain);
+    $("detail").classList.toggle("mp", motorMain);
+    $("dash").style.display = root ? "block" : "none";
+    $("zdash").style.display = zoneMode ? "block" : "none";
+    $("hero").style.display = (root || motorMain || zoneMode) ? "none" : "";
+    $("hero").classList.toggle("small", !root);
+    const hd = load("img_hero");
+    $("hero").style.backgroundImage = hd ? `${GRAD}, url("${hd}")` : GRAD;
+
+    $("title").textContent = root ? t("heroTitle")
+      : inRep ? repTitle(rep) : (eq ? eq.name : node.name);
+    $("sub").textContent = root ? t("heroSub")
+      : crumbs() + (eq ? "  ›  " + eq.name : "");
+
+    const slot = $("leftSlot");
+    slot.innerHTML = "";
+    if (root){
+      slot.className = "menu";
+      slot.innerHTML = "<div><i></i><i></i><i></i></div>";
+      slot.onclick = openMenu;
+    } else {
+      slot.className = "btn";
+      slot.textContent = isRTL() ? "→" : "←";
+      slot.onclick = () => history.back();
+    }
+    $("menuBtn2").style.display = root ? "none" : "grid";
+
+    const showDetail = isDetail || inRep;
+    $("searchBox").style.display = (showDetail || root || zoneMode) ? "none" : "flex";
+    $("label").style.display = (showDetail || root) ? "none" : "block";
+    $("grid").style.display = (showDetail || root) ? "none" : "grid";
+    $("detail").style.display = showDetail ? "block" : "none";
+
+    if (root){ renderDash(); return; }
+
+    if (inRep){ renderReports(node); return; }
+
+    if (isDetail){
+      if (detailId !== node.id){ detailId = node.id; tab = "specs"; }
+      if (eq) renderEquip(node, eq); else renderDetail(node);
+      return;
+    }
+
+    if (zoneMode) renderZoneDash(node);
+
+    const lvl = lvlName(depth);
+    $("label").textContent = t("select", lvl.toLowerCase());
+    $("q").value = "";
+    const grid = $("grid");
+    grid.innerHTML = "";
+
+    if (repAvail(depth, node)){
+      const rc = document.createElement("div");
+      rc.className = "card rep";
+      rc.innerHTML = '<div class="icon">📊</div><b></b>';
+      rc.querySelector("b").textContent = t("reports");
+      rc.onclick = () => openRep("menu");
+      grid.appendChild(rc);
+    }
+
+    list.forEach(n => grid.appendChild(card(n, depth, list)));
+
+    const add = document.createElement("div");
+    add.className = "card add";
+    add.innerHTML = '<div class="icon">+</div><b></b>';
+    add.querySelector("b").textContent = t("addLvl", lvl);
+    add.onclick = () => addItem(list, lvl);
+    grid.appendChild(add);
+
+    if (!list.length && !admin){
+      const e = document.createElement("div");
+      e.className = "empty";
+      e.textContent = t("nothing");
+      grid.appendChild(e);
+    }
+  }
+
+  function card(n, depth, list){
+    const el = document.createElement("div");
+    el.className = "card";
+    el.dataset.name = n.name.toLowerCase();
+    const src = load("img_" + n.id);
+    const icon = ICONS[depth] || "📁";
+
+    const cam = mkBadge("📷", "b-cam", () => pick(n.id));
+    const ed  = mkBadge("✏️", "b-edit", () => renameItem(n));
+    const rm  = mkBadge("🗑", "b-del",  () => removeItem(n));
+    const cp  = mkBadge("📋", "b-copy", () => copyItem(list, n));
+    cp.title = t("copyItem");
+
+    const ic = document.createElement("div");
+    ic.className = "icon";
+    if (src){
+      const im = document.createElement("img"); im.src = src; ic.appendChild(im);
+    } else {
+      const f = iconFile(n, depth);
+      if (f){
+        const im = new Image();
+        im.alt = "";
+        ic.classList.add("real3d");
+        im.onerror = () => {
+          ic.classList.remove("real3d");
+          im.remove();
+          ic.textContent = icon;
+        };
+        im.src = f;
+        ic.appendChild(im);
+      } else ic.textContent = icon;
+    }
+    const b = document.createElement("b");
+    b.textContent = n.name;
+
+    el.append(cam, ed, rm, cp, ic, b);
+    el.onclick = () => goInto(n);
+    return el;
+  }
+  function mkBadge(txt, cls, fn){
+    const s = document.createElement("span");
+    s.className = "badge " + cls;
+    s.textContent = txt;
+    s.onclick = e => { e.stopPropagation(); if (admin) fn(); };
+    return s;
+  }
+
+  /* ================================================================
+     HOME DASHBOARD
+     ================================================================ */
+  const h = s => { const e = document.createElement("div"); e.innerHTML = s.trim(); return e.firstElementChild; };
+  const fmtBig = v => Number(v).toLocaleString("en-US", {maximumFractionDigits:2});
+
+  /* totals are calculated live from the motors' technical specs */
+  function plantStats(){
+    let n = 0, a = 0, kw = 0, full = 0;
+    const rec = (list, depth) => list.forEach(x => {
+      if (depth === 3){
+        n++;
+        const A = motorA(x), K = motorKW(x);
+        if (A != null) a += A;
+        if (K != null) kw += K;
+        if (A != null && K != null) full++;
+      } else rec(x.children || [], depth + 1);
+    });
+    rec(tree, 0);
+    return {n, a:r2(a), kw:r2(kw), pct: n ? Math.round(full * 100 / n) : 0};
+  }
+  /* same numbers, but only for one zone (zone → room → panel → motor) */
+  function zoneStats(zone){
+    let n = 0, a = 0, kw = 0, full = 0;
+    const rec = (list, depth) => list.forEach(x => {
+      if (depth === 3){
+        n++;
+        const A = motorA(x), K = motorKW(x);
+        if (A != null) a += A;
+        if (K != null) kw += K;
+        if (A != null && K != null) full++;
+      } else rec(x.children || [], depth + 1);
+    });
+    rec(zone.children || [], 1);
+    return {n, a:r2(a), kw:r2(kw), pct: n ? Math.round(full * 100 / n) : 0};
+  }
+
+  function searchAll(q){
+    const out = [], ql = q.toLowerCase();
+    const rec = (list, ids, names, depth) => list.forEach(n => {
+      const p = [...ids, n.id], nm = [...names, n.name];
+      if (n.name.toLowerCase().includes(ql)) out.push({path:p, names:nm, depth});
+      if (out.length < 80) rec(n.children || [], p, nm, depth + 1);
+    });
+    rec(tree, [], [], 0);
+    return out.slice(0, 40);
+  }
+
+  function zbadge(txt, i, fn){
+    const s = document.createElement("span");
+    s.className = "badge";
+    s.style.cssText = `right:${8 + i*36}px;left:auto;z-index:3`;
+    s.textContent = txt;
+    s.onclick = e => { e.stopPropagation(); if (admin) fn(); };
+    return s;
+  }
+  function zoneCard(n){
+    const meta = ZONE_META[n.name] || {c:"#1d6fe0", t:"#e1ecff", icon:"gear"};
+    const nm = zoneNames(n);
+    const el = document.createElement("div");
+    el.className = "zc";
+    el.style.setProperty("--zc", meta.c);
+    el.style.setProperty("--zt", meta.t);
+    const src = load("img_" + n.id);
+    if (src){
+      const p = document.createElement("div");
+      p.className = "zp"; p.style.backgroundImage = `url("${src}")`;
+      el.appendChild(p);
+    }
+    el.append(zbadge("📷", 0, () => pick(n.id)), zbadge("✏️", 1, () => editZoneCard(n)), zbadge("🗑", 2, () => removeItem(n)), zbadge("📋", 3, () => copyItem(tree, n)));
+    const ic = document.createElement("div"); ic.className = "zi"; ic.innerHTML = SV[meta.icon];
+    const b = document.createElement("b"); b.textContent = nm[0];
+    const s = document.createElement("small"); s.textContent = nm[1];
+    const go = document.createElement("div"); go.className = "zgo"; go.textContent = "›";
+    el.append(ic, b, s, go);
+    el.onclick = () => goInto(n);
+    return el;
+  }
+
+  /* admin: edit the visible texts */
+  function editBanner(){
+    if (!admin) return;
+    const ks = [["dHello","eHello"],["dTitle","eTitle"],["dSub","eSub"],["dBtn","eBtn"]], vals = {};
+    for (const [k, lab] of ks){
+      const v = prompt(t(lab) + (k === "dHello" ? "\n" + t("eEmpty") : ""), tx(k));
+      if (v === null) return;
+      vals[k] = v.trim();
+    }
+    ks.forEach(([k]) => setTxt(vals[k], LANG, k));
+    render();
+  }
+  function editZoneCard(n){
+    if (!admin) return;
+    const nm = zoneNames(n);
+    const a = prompt(t("eZName") + "\n" + t("eEmpty"), nm[0]);
+    if (a === null) return;
+    const b = prompt(t("eZSub"), nm[1]);
+    if (b === null) return;
+    setTxt([a.trim(), b.trim()], "zones", n.id, LANG);
+    if (!ZONE_META[n.name] && a.trim()){ n.name = a.trim(); saveTree(); }
+    render();
+  }
+  function editZoneHead(zone){
+    if (!admin) return;
+    const nm = zoneNames(zone);
+    const o = ovr("zh", zone.id, LANG);
+    const a = prompt(t("eZH1") + "\n" + t("eEmpty"), (o && o[0]) || (t("dHello") + " — " + t("zDash", nm[0])));
+    if (a === null) return;
+    const b = prompt(t("eZH2"), (o && o[1]) || t("zSub"));
+    if (b === null) return;
+    setTxt([a.trim(), b.trim()], "zh", zone.id, LANG);
+    render();
+  }
+
+  function updOnline(){
+    const on = navigator.onLine;
+    document.querySelectorAll("#dash .dot").forEach(e => { e.style.background = on ? "#35d070" : "#9aa7c4"; });
+    document.querySelectorAll("#dash .onlt").forEach(e => { e.textContent = t(on ? "online" : "offline"); });
+  }
+  window.addEventListener("online", updOnline);
+  window.addEventListener("offline", updOnline);
+
+  function renderDash(){
+    const d = $("dash");
+    d.innerHTML = "";
+    const st = plantStats();
+
+    /* top bar: logo + menu (login is inside the menu) */
+    const top = h(`<div class="dtop"><div class="dlogo">${LOGO}<span>BIS CO.</span></div><div class="dtools"></div></div>`);
+    const mb = h(`<div class="dbtn${me ? " adm" : ""}"><div class="hb"><i></i><i></i><i></i></div></div>`);
+    mb.onclick = openMenu;
+    top.querySelector(".dtools").append(mb);
+
+    /* welcome banner (texts can be edited by the admin) */
+    const ban = h(`<div class="dban"><div class="bimg"></div><div class="btxt"><div class="dots"><i></i><i></i><i></i></div><div class="h1">${esc(tx("dHello"))}</div><div class="h2">${esc(tx("dTitle"))}</div><div class="h3">${esc(tx("dSub"))}</div><div class="line"></div><div class="bbtn"><span>${esc(tx("dBtn"))}</span><span>›</span></div></div><div class="dcam">📷</div><div class="dedit">✏️</div></div>`);
+    const bi = ban.querySelector(".bimg"), hd = load("img_hero");
+    if (hd) bi.style.backgroundImage = `url("${hd}")`; else bi.innerHTML = MOTOR_SVG;
+    ban.querySelector(".dcam").onclick = e => { e.stopPropagation(); pick("hero"); };
+    ban.querySelector(".dedit").onclick = e => { e.stopPropagation(); editBanner(); };
+
+    /* search (zones, rooms, panels and motors) */
+    const sb = h(`<div class="dsearch">${SV.search}<input dir="${isRTL() ? "rtl" : "ltr"}"></div>`);
+    const inp = sb.querySelector("input");
+    inp.placeholder = t("searchAll");
+    const res = h('<div class="dres"></div>');
+
+    /* zone cards */
+    const zg = h('<div class="zgrid"></div>');
+    const zi = n => { const i = ZONE_ORDER.indexOf(n.name); return i < 0 ? 99 : i; };
+    [...tree].sort((a, b) => zi(a) - zi(b)).forEach(n => zg.appendChild(zoneCard(n)));
+    const add = h('<div class="card add"><div class="icon">+</div><b></b></div>');
+    add.querySelector("b").textContent = t("addLvl", lvlName(0));
+    add.onclick = () => addItem(tree, lvlName(0));
+    zg.appendChild(add);
+
+    /* summary */
+    const items = [
+      {c:"#7a52e0", svg:SV.gauge("#7a52e0"), v:fmtBig(st.a),  l:t("sCur"), u:"(A)",  p:100},
+      {c:"#f28a1a", svg:SV.bolt("#f28a1a"),  v:fmtBig(st.kw), l:t("sPow"), u:"(kW)", p:100},
+      {c:"#1d6fe0", svg:SV.motor("#1d6fe0"), v:fmtBig(st.n),  l:t("sCnt"), u:"",     p:100},
+      {c:"#22a94b", svg:SV.heart("#22a94b"), v: st.n ? st.pct + "%" : "—", l:t("sOk"), u:"", p: st.n ? st.pct : 0}
+    ];
+    const sum = h(`<div class="dsum"><h4>${SV.bars}<span>${esc(t("summary"))}</span></h4><div class="sgrid"></div></div>`);
+    items.forEach(it => sum.querySelector(".sgrid").appendChild(h(
+      `<div class="sitem"><div class="sring" style="--rc:${it.c};--p:${it.p}"><div class="in">${it.svg}</div></div><div class="sval">${esc(it.v)}</div><div class="slab">${esc(it.l)}${it.u ? "<br>" + it.u : ""}</div></div>`)));
+
+    ban.querySelector(".bbtn").onclick = () => sum.scrollIntoView({behavior:"smooth", block:"center"});
+
+    /* footer */
+    const foot = h(`<div class="dfoot"><div class="sky">${SV.sky}</div><div></div><div class="fm">BIS CO.</div><div class="fr"><i class="dot"></i><span class="onlt"></span></div></div>`);
+
+    inp.oninput = () => {
+      const q = inp.value.trim();
+      if (!q){ res.style.display = "none"; zg.style.display = ""; sum.style.display = ""; return; }
+      zg.style.display = "none"; sum.style.display = "none";
+      res.style.display = "block"; res.innerHTML = "";
+      const r = searchAll(q);
+      if (!r.length){
+        const e = h('<div class="empty" style="grid-column:auto"></div>');
+        e.textContent = t("noRes");
+        res.appendChild(e);
+      }
+      r.forEach(x => {
+        const row = h('<div class="rrow"><div class="ri"></div><div class="rtx"><b></b><small></small></div></div>');
+        row.querySelector(".ri").textContent = ICONS[x.depth] || "📁";
+        row.querySelector("b").textContent = x.names[x.names.length - 1];
+        row.querySelector("small").textContent = x.depth ? x.names.slice(0, -1).join("  ›  ") : lvlName(0);
+        row.onclick = () => goTo(x.path);
+        res.appendChild(row);
+      });
+    };
+
+    d.append(top, ban, sb, res, zg, sum, foot);
+    updOnline();
+  }
+
+  /* ================================================================
+     ZONE DASHBOARD: photo header (uploadable) + motor statistics
+     ================================================================ */
+  function renderZoneDash(zone){
+    const z = $("zdash");
+    z.innerHTML = "";
+    const meta = ZONE_META[zone.name] || {c:"#1d6fe0", t:"#e1ecff", icon:"gear"};
+    const nm = zoneNames(zone);
+    const img = load("img_zh_" + zone.id);
+    const st = zoneStats(zone);
+    const zo = ovr("zh", zone.id, LANG);
+
+    /* header with photo */
+    const head = h(`<div class="zhead"><div class="zimg"></div><div class="zov"></div>
+      <div class="ztop"><div class="cbtn zb">←</div><div class="dlogo">${LOGO}<span>BIS CO.</span></div><div class="cbtn zm">☰</div></div>
+      <div class="ztx">
+        <div class="zname"><div class="zbi" style="--zc:${meta.c}">${SV[meta.icon] || SV.gear}</div><b></b></div>
+        <div class="zh1"></div><div class="zh2"></div>
+      </div>
+      <div class="zedit">✏️</div>
+      <div class="zcam" title="${esc(t("hdrPhoto"))}">📷</div></div>`);
+    if (img) head.querySelector(".zimg").style.backgroundImage = `url("${img}")`;
+    head.querySelector(".zname b").textContent = nm[0];
+    head.querySelector(".zh1").textContent = (Array.isArray(zo) && zo[0]) || (t("dHello") + " — " + t("zDash", nm[0]));
+    head.querySelector(".zh2").textContent = (Array.isArray(zo) && zo[1]) || t("zSub");
+    head.querySelector(".zb").onclick = () => history.back();
+    head.querySelector(".zm").onclick = openMenu;
+    head.querySelector(".zcam").onclick = e => { e.stopPropagation(); pick("zh_" + zone.id); };
+    head.querySelector(".zedit").onclick = e => { e.stopPropagation(); editZoneHead(zone); };
+
+    /* motor statistics */
+    const items = [
+      {c:"#1d6fe0", tint:"#e1ecff", svg:SV.motor("#1d6fe0"), v:fmtBig(st.n),            l:t("zCnt")},
+      {c:"#f28a1a", tint:"#fdebd8", svg:SV.bolt("#f28a1a"),  v:fmtBig(st.kw) + " kW",   l:t("zPow")},
+      {c:"#7a52e0", tint:"#ece5ff", svg:SV.gauge("#7a52e0"), v:fmtBig(st.a) + " A",     l:t("zCur")},
+      {c:"#22a94b", tint:"#e3f6e9", svg:SV.heart("#22a94b"), v: st.n ? st.pct + "%" : "—", l:t("zOk")}
+    ];
+    const box = h(`<div class="zstat"><h4>${SV.bars}<span></span></h4><div class="zsg"></div></div>`);
+    box.querySelector("h4 span").textContent = t("zStats", nm[0]);
+    items.forEach(it => {
+      const c = h(`<div class="zs" style="--zt:${it.tint}"><div class="zsi">${it.svg}</div><div class="tx"><div class="sv"></div><div class="sl"></div></div></div>`);
+      c.querySelector(".sv").textContent = it.v;
+      c.querySelector(".sl").textContent = it.l;
+      box.querySelector(".zsg").appendChild(c);
+    });
+
+    z.append(head, box);
+  }
+
+  /* ===== Helpers ===== */
+  function mini(txt, fn){
+    const s = document.createElement("span");
+    s.className = "mini"; s.textContent = txt;
+    s.onclick = e => { e.stopPropagation(); fn(); };
+    return s;
+  }
+  function pbtn(txt, fn, cls=""){
+    const b = document.createElement("div");
+    b.className = "pbtn " + cls; b.textContent = txt;
+    b.onclick = fn;
+    return b;
+  }
+  function section(title){
+    const sec = document.createElement("div");
+    sec.className = "sec";
+    if (title){ const hh = document.createElement("h3"); hh.textContent = title; sec.appendChild(hh); }
+    return sec;
+  }
+  /* Editable list of "name: value" parameters (used by motor and equipment) */
+  function specsBlock(arr, title, rerender){
+    const sec = section(title);
+    arr.forEach((s,i)=>{
+      const r = document.createElement("div");
+      r.className = "spec";
+      const k = document.createElement("span"); k.className = "k"; k.textContent = specLabel(s.k);
+      const v = document.createElement("span"); v.className = "v"; v.textContent = s.v || "—";
+      r.append(k, v);
+      if (admin){
+        r.append(
+          mini("✏️", () => {
+            const nk = prompt(t("paramName"), s.k); if (nk === null) return;
+            const nv = prompt(t("value"), s.v);     if (nv === null) return;
+            s.k = nk.trim() || s.k; s.v = nv.trim(); saveTree(); rerender();
+          }),
+          mini("🗑", () => {
+            if (!confirm(t("delRow"))) return;
+            arr.splice(i,1); saveTree(); rerender();
+          })
+        );
+      }
+      sec.appendChild(r);
+    });
+    const add = document.createElement("button");
+    add.className = "addbtn"; add.textContent = t("addParam");
+    add.onclick = () => {
+      const k = (prompt(t("paramName")) || "").trim(); if (!k) return;
+      const v = (prompt(t("value")) || "").trim();
+      arr.push({k, v}); saveTree(); rerender();
+    };
+    sec.appendChild(add);
+    return sec;
+  }
+  const allFiles = n => [
+    ...(n.specFiles||[]), ...(n.drawFiles||[]), ...(n.plate ? [n.plate] : []),
+    ...(n.equip||[]).flatMap(q => [...(q.files||[]), ...(q.photos||[])])
+  ];
+
+  /* ===== Motor page (new design) ===== */
+  /* [id, label key, icon, matches spec name, must NOT match, unit] */
+  const KEYS = [
+    ["power",   "kPow", "⚡", POW_RE, PF_RE, "kW"],
+    ["voltage", "kVol", "🔌", /volt|ولتاژ/i, null, "V"],
+    ["current", "kCur", "Ⓐ",  CUR_RE, null, "A"],
+    ["speed",   "kSpd", "🌀", /speed|rpm|دور/i, null, "RPM"],
+    ["freq",    "kFrq", "〰️", /freq|hz|فرکانس/i, null, "Hz"],
+    ["ip",      "kIp",  "🛡️", /\bip\b|حفاظت/i, null, ""]
+  ];
+  function keyVal(node, k){
+    const v = String(findSpec({specs: node.specs}, k[3], k[4]) || "").trim();
+    if (!v) return "";
+    return k[5] && !new RegExp(k[5], "i").test(v) ? v + " " + k[5] : v;
+  }
+  function eqIcon(name){
+    const n = String(name);
+    if (/sensor|temp|سنسور|دما|ترموکوپل|PT100/i.test(n)) return "🌡️";
+    if (/contactor|کنتاکتور/i.test(n)) return "🔘";
+    if (/relay|overload|رله|اضافه/i.test(n)) return "🛡️";
+    if (/bearing|بلبرینگ|یاتاقان/i.test(n)) return "⚙️";
+    if (/coupling|کوپلینگ/i.test(n)) return "🔗";
+    if (/starter|inverter|drive|استارتر|اینورتر|درایو/i.test(n)) return "🎛️";
+    if (/panel|box|تابلو|ترمینال|terminal/i.test(n)) return "🗄️";
+    if (/fan|فن|پنکه/i.test(n)) return "🌀";
+    if (/heater|هیتر/i.test(n)) return "🔥";
+    return "🧰";
+  }
+
+  function renderDetail(node){
+    ensure(node);
+    const d = $("detail");
+    d.innerHTML = "";
+
+    /* completeness of the technical parameters */
+    const total = node.specs.length;
+    const filled = node.specs.filter(s => String(s.v || "").trim()).length;
+    const pct = total ? Math.round(filled * 100 / total) : 0;
+
+    /* top bar */
+    const top = h(`<div class="mtop"><div class="cbtn">${isRTL() ? "→" : "←"}</div><div class="mcrumb">${esc(crumbs())}</div><div class="cbtn">☰</div></div>`);
+    top.children[0].onclick = () => history.back();
+    top.children[2].onclick = openMenu;
+
+    /* motor hero card */
+    const hero = h(`<div class="mhero"><div class="mimg">${MOTOR_SVG2}</div><div class="tx"><div class="lb">${esc(t("lvl3"))}</div><h2>${esc(node.name)}</h2><div class="path">${esc(crumbs())}</div><div class="spill${pct >= 80 ? "" : " warn"}"><i></i><span>${esc(t(pct >= 80 ? "statusFull" : "statusPart"))}</span></div></div></div>`);
+
+    /* status summary */
+    const rowOf = i => {
+      const k = KEYS[i];
+      return `<div class="srow"><span class="si">${k[2]}</span><span class="sk">${esc(t(k[1]))}</span><b>${esc(keyVal(node, k) || "—")}</b></div>`;
+    };
+    const sum = h(`<div class="msum"><h4>${esc(t("summ2"))}</h4><div class="mrow"><div class="rw"><div class="sring" style="--rc:#22a94b;--p:${pct}"><div class="in"><b class="pv">${pct}%</b></div></div>${esc(t("cmpl"))}</div><div class="rows">${rowOf(0)}${rowOf(1)}${rowOf(2)}</div></div></div>`);
+
+    /* tabs */
+    const tabs = document.createElement("div");
+    tabs.className = "tabs";
+    [["specs","⚙️ " + t("tabSpecs")],["equip","🧰 " + t("tabEquip")],["draw","📐 " + t("tabDraw")]].forEach(([k,txt])=>{
+      const b = document.createElement("div");
+      b.className = "tab" + (tab===k ? " on" : "");
+      b.textContent = txt;
+      b.onclick = () => { tab = k; renderDetail(node); };
+      tabs.appendChild(b);
+    });
+
+    d.append(top, hero, sum, tabs);
+
+    if (tab === "specs"){
+      /* nameplate + key tiles (everyone) */
+      const c1 = h('<div class="mcard"></div>');
+      c1.appendChild(plateBlock(node));
+      const kt = h('<div class="ktiles"></div>');
+      KEYS.forEach(k => kt.appendChild(h(`<div class="kt"><div class="ic">${k[2]}</div><div><div class="kk">${esc(t(k[1]))}</div><div class="kv">${esc(keyVal(node, k) || "—")}</div></div></div>`)));
+      c1.appendChild(kt);
+      d.appendChild(c1);
+
+      if (admin){
+        /* all parameters (editable) + spec files: only the admin edits these */
+        const c2 = h('<div class="mcard"></div>');
+        c2.appendChild(specsBlock(node.specs, t("allParams"), () => renderDetail(node)));
+        d.appendChild(c2);
+
+        const c3 = h('<div class="mcard"></div>');
+        c3.appendChild(filesBlock(node.specFiles, t("otherSpec"), undefined, f => ocrFill(node.specs, f)));
+        d.appendChild(c3);
+      } else {
+        /* everybody else can see (and download) the photos saved in the parameters section */
+        const imgs = (node.specFiles || []).filter(f => kind(f) === "img");
+        if (imgs.length){
+          const c3 = h('<div class="mcard"></div>');
+          c3.appendChild(filesBlock(imgs, t("specPhotos")));
+          d.appendChild(c3);
+        }
+      }
+    }
+
+    if (tab === "equip"){
+      const c = h('<div class="mcard"></div>');
+      const sec = section(t("usedEquip"));
+      const grid = h('<div class="ecards"></div>');
+      node.equip.forEach(q => {
+        const model = (q.specs.find(s => /model|serial|type|مدل|سریال/i.test(s.k)) || {}).v || "";
+        const el = h(`<div class="ec"><div class="ei">${eqIcon(q.name)}</div><b>${esc(q.name)}</b><small>${esc(model || t("eqCounts", q.specs.length, q.photos.length, q.files.length))}</small></div>`);
+        const e1 = mini("✏️", () => renameEquip(q)); e1.classList.add("m1");
+        const e2 = mini("🗑", () => removeEquip(node, q)); e2.classList.add("m2");
+        el.append(e1, e2);
+        el.onclick = () => openEquip(q.id);
+        grid.appendChild(el);
+      });
+      sec.appendChild(grid);
+      if (!node.equip.length && !admin){
+        const e = document.createElement("div");
+        e.className = "nofile"; e.style.gridColumn = "auto";
+        e.textContent = t("noEquip");
+        sec.appendChild(e);
+      }
+      const add = document.createElement("button");
+      add.className = "addbtn"; add.textContent = t("addEquip");
+      add.style.marginTop = "12px";
+      add.onclick = () => {
+        const name = (prompt(t("eqPrompt")) || "").trim();
+        if (!name) return;
+        node.equip.push({id: uid(), name, desc:"", specs: EQ_SPECS.map(k => ({k, v:""})), photos:[], files:[]});
+        saveTree(); renderDetail(node);
+      };
+      sec.appendChild(add);
+      c.appendChild(sec);
+      d.appendChild(c);
+    }
+
+    if (tab === "draw"){
+      const c = h('<div class="mcard"></div>');
+      c.appendChild(filesBlock(node.drawFiles, t("docsTitle")));
+      d.appendChild(c);
+    }
+  }
+
+  /* ===== Nameplate (original quality, tap to zoom, download) ===== */
+  function plateBlock(node){
+    const box = document.createElement("div");
+    box.className = "plate";
+    const inp = document.createElement("input");
+    inp.type = "file"; inp.accept = "image/*"; inp.style.display = "none";
+    inp.onchange = () => { if (inp.files[0]) setPlate(node, inp.files[0]); };
+    box.appendChild(inp);
+
+    if (node.plate){
+      const im = new Image();
+      im.alt = t("plateAlt");
+      dbGet(node.plate.id).then(b => {
+        if (!b) return;
+        const u = URL.createObjectURL(b);
+        im.src = u;
+        im.onclick = () => openLightbox(u, dlName(node.plate));
+      });
+      const hint = document.createElement("div");
+      hint.className = "hint"; hint.textContent = t("plateHint");
+      box.append(im, hint);
+      const dlb = pbtn(t("dlPlate"), () => downloadFile(node.plate));
+      dlb.style.margin = "10px 0 0";
+      box.appendChild(dlb);
+      const bar = document.createElement("div");
+      bar.className = "pbtns";
+      bar.append(
+        pbtn(t("replace"), () => inp.click()),
+        pbtn(t("delPhoto"), async () => {
+          if (!confirm(t("delPlateQ"))) return;
+          await dbDel(node.plate.id);
+          node.plate = null; saveTree(); renderDetail(node);
+        }, "red")
+      );
+      box.appendChild(bar);
+    } else {
+      const none = document.createElement("div");
+      none.className = "none"; none.textContent = t("noPlate");
+      box.appendChild(none);
+      const bar = document.createElement("div");
+      bar.className = "pbtns";
+      bar.appendChild(pbtn(t("uploadPlate"), () => inp.click()));
+      box.appendChild(bar);
+    }
+    return box;
+  }
+  async function setPlate(node, file){
+    if (!admin || !file) return;
+    if (!(await okToStore(file))) return;
+    const id = uid();
+    try { await dbPut(id, file); } catch(e){ alert(t("saveFail")); return; }   // original, no resizing
+    if (node.plate) dbDel(node.plate.id);
+    node.plate = {id, name: file.name, type: file.type || "image/jpeg"};
+    saveTree(); renderDetail(node);
+    await ocrFill(node.specs, file);                 // read the nameplate and fill the parameters
+  }
+
+  /* ================================================================
+     OCR: read parameters from a nameplate / equipment photo
+     (Tesseract.js is downloaded from the internet the first time)
+     ================================================================ */
+  let toastT = null;
+  function toast(msg, ms){
+    const tt = $("toast");
+    clearTimeout(toastT);
+    if (!msg){ tt.style.display = "none"; return; }
+    tt.textContent = msg; tt.style.display = "block";
+    if (ms) toastT = setTimeout(() => { tt.style.display = "none"; }, ms);
+  }
+
+  let tessP = null;
+  function loadTess(){
+    if (window.Tesseract) return Promise.resolve();
+    if (!tessP) tessP = new Promise((res, rej) => {
+      const s = document.createElement("script");
+      s.src = "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";
+      s.onload = res;
+      s.onerror = () => { tessP = null; rej(new Error("load")); };
+      document.head.appendChild(s);
+    });
+    return tessP;
+  }
+
+  /* upscale + grayscale + contrast stretch → better OCR on metal plates */
+  async function prepImage(file){
+    const url = URL.createObjectURL(file);
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
+    const k = Math.min(2, 2200 / Math.max(img.width, img.height));
+    const c = document.createElement("canvas");
+    c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+    const x = c.getContext("2d");
+    x.drawImage(img, 0, 0, c.width, c.height);
+    URL.revokeObjectURL(url);
+    const d = x.getImageData(0, 0, c.width, c.height), p = d.data;
+    let lo = 255, hi = 0;
+    for (let i = 0; i < p.length; i += 4){
+      const g = (p[i]*0.3 + p[i+1]*0.59 + p[i+2]*0.11) | 0;
+      p[i] = p[i+1] = p[i+2] = g;
+      if (g < lo) lo = g; if (g > hi) hi = g;
+    }
+    const s = 255 / Math.max(1, hi - lo);
+    for (let i = 0; i < p.length; i += 4){
+      const v = Math.min(255, Math.max(0, (p[i] - lo) * s));
+      p[i] = p[i+1] = p[i+2] = v;
+    }
+    x.putImageData(d, 0, 0);
+    return new Promise(res => c.toBlob(res, "image/png"));
+  }
+
+  async function ocrText(file){
+    await loadTess();
+    const blob = await prepImage(file);
+    const worker = await Tesseract.createWorker("eng", 1, {
+      logger: m => { if (m.status === "recognizing text") toast(t("ocrPct", Math.round(m.progress*100)), 0); }
+    });
+    try { await worker.setParameters({tessedit_pageseg_mode: "11"}); } catch(e){}
+    const {data} = await worker.recognize(blob);
+    await worker.terminate();
+    return data.text || "";
+  }
+
+  const BRANDS = ["Siemens","ABB","WEG","Leroy[- ]?Somer","Nidec","Schneider","Toshiba","Hyundai","TECO","Mitsubishi",
+    "Brook Crompton","Crompton","Marathon","Baldor","Emerson","Lenze","SEW","Bonfiglioli","Grundfos","KSB","Lowara",
+    "Sulzer","Franklin","Wilo","Hitachi","Fuji","Yaskawa","Danfoss","Rockwell","Allen[- ]?Bradley","Eaton","Moeller",
+    "Legrand","Omron","Phoenix Contact","LS Electric","LSIS","Havells","CG Power","Kirloskar","Hyosung","Motogen",
+    "Electrogen","Pars Electric","Ebara","Pedrollo","VEM","Telemecanique","General Electric"];
+  const BRAND_RE = new RegExp("\\b(" + BRANDS.join("|") + ")\\b", "i");
+  const prettyBrand = s => { s = s.replace(/\s+/g, " ").trim(); return s.length <= 4 ? s.toUpperCase() : s.replace(/\b\w/g, c => c.toUpperCase()).replace(/\B\w/g, c => c.toLowerCase()); };
+
+  function parsePlate(raw){
+    const tx_ = String(raw).replace(/[‐‑‒–—−]/g, "-").replace(/\u00a0/g, " ");
+    const dot = s => s.replace(/,/g, ".");
+    const f = {};
+    let m;
+    if ((m = tx_.match(/(\d+(?:[.,]\d+)?)\s*k\s?W\b/i))) f.power = dot(m[1]);
+    else if ((m = tx_.match(/(\d+(?:[.,]\d+)?)\s*(?:HP|CV|PS)\b/i))){
+      const hp = parseFloat(dot(m[1]));
+      f.power = String(Math.round(hp * (/hp/i.test(m[0]) ? 0.7457 : 0.7355) * 100) / 100);
+      f.hp = true;
+    }
+    if ((m = tx_.match(/((?:\d{2,4}\s*[YΔ∆]?\s*[\/-]\s*)?\d{2,4}\s*[YΔ∆]?)\s*V(?![A-Za-z])/))) f.voltage = m[1].replace(/\s+/g, "");
+    if ((m = tx_.match(/\b(\d+(?:[.,]\d+)?(?:\s*[\/-]\s*\d+(?:[.,]\d+)?)?)\s*A(?![A-Za-z])/))) f.current = dot(m[1]).replace(/\s+/g, "");
+    if ((m = tx_.match(/(\d{3,5})\s*(?:r\s?\/?\s?min|rpm|min\s*-?\s*1|U\s?\/\s?min|1\s?\/\s?min)/i))) f.speed = m[1];
+    if ((m = tx_.match(/\b(\d{2}(?:\s*\/\s*\d{2})?)\s*Hz/i))) f.freq = m[1].replace(/\s+/g, "");
+    if ((m = tx_.match(/cos\s*\S{0,2}\s*[:=]?\s*(0[.,]\d{1,3})/i)) || (m = tx_.match(/\bp\.?f\.?\s*[:=]?\s*(0[.,]\d{1,3})/i))) f.pf = dot(m[1]);
+    if ((m = tx_.match(/\bIP\s?(\d{2}[A-Z]?)\b/))) f.ip = "IP" + m[1];
+    if ((m = tx_.match(/(?:ins(?:ul)?\.?\s*cl(?:ass)?\.?|therm\.?\s*cl(?:ass)?\.?|insulation\s*class|isol\.?\s*class)\s*[:.]?\s*([ABEFH])\b/i)) ||
+        (m = tx_.match(/\bcl(?:ass)?\.?\s*([BFH])\b/i))) f.ins = m[1].toUpperCase();
+    if ((m = tx_.match(/\b(?:s\/n|serial(?:\s*(?:no|nr|number))?|ser\.?\s*(?:no|nr)|serien-?nr)\.?\s*[:.#]?\s*((?=[A-Z0-9\/.\-]*\d)[A-Z0-9][A-Z0-9\/.\-]{3,})/i))) f.serial = m[1].toUpperCase();
+    if ((m = tx_.match(/\b(?:TYPE|Type|TYP|Typ|MODEL|Model|MOD)\.?\s*[:.]?\s*([A-Z0-9][A-Z0-9\/.\-]{2,}(?:\s[A-Z0-9][A-Z0-9\/.\-]{1,})?)/))) f.model = m[1].trim();
+    if ((m = tx_.match(BRAND_RE))) f.manuf = prettyBrand(m[1]);
+    return f;
+  }
+
+  /* spec rows to fill: [found key, English label used when the row doesn't exist, matches existing row, must NOT match] */
+  const OCR_FIELDS = [
+    ["power",   "Power (kW)",          /power|\bkw\b|توان/i, /factor|cos|φ|ضریب/i],
+    ["voltage", "Voltage (V)",         /volt|ولتاژ/i],
+    ["current", "Current (A)",         /current|\(a\)|amp|جریان|آمپر/i],
+    ["speed",   "Speed (RPM)",         /speed|rpm|دور/i],
+    ["freq",    "Frequency (Hz)",      /freq|hz|فرکانس/i],
+    ["pf",      "Power factor (cos φ)",/power factor|cos|φ|ضریب توان/i],
+    ["ins",     "Insulation class",    /insul|عایق/i],
+    ["ip",      "IP rating",           /\bip\b|حفاظت/i],
+    ["manuf",   "Manufacturer",        /manufact|brand|maker|سازنده|برند/i],
+    ["ms",      "Model / Serial",      /model|serial|type|مدل|سریال/i]
+  ];
+  /* fills empty rows, adds missing rows, never overwrites a value that is already there */
+  function applySpecs(specs, found){
+    const done = [], skipped = [];
+    OCR_FIELDS.forEach(([key, label, re, not]) => {
+      const val = key === "ms" ? [found.model, found.serial].filter(Boolean).join(" / ") : found[key];
+      if (!val) return;
+      const s = specs.find(x => re.test(x.k) && !(not && not.test(x.k)));
+      if (s){
+        if (!String(s.v || "").trim()){ s.v = val; done.push([specLabel(s.k), val]); }
+        else skipped.push([specLabel(s.k), val]);
+      } else { specs.push({k: label, v: val}); done.push([specLabel(label), val]); }
+    });
+    return {done, skipped};
+  }
+
+  function showResult(res, found){
+    return new Promise(resolve => {
+      const b = $("modBox");
+      b.innerHTML = "";
+      const hh = document.createElement("h3"); hh.textContent = t("ocrRead"); b.appendChild(hh);
+      const list = (title, arr) => {
+        if (!arr.length) return;
+        const tt = document.createElement("div"); tt.className = "sub"; tt.textContent = title; b.appendChild(tt);
+        arr.forEach(([k, v]) => {
+          const r = document.createElement("div"); r.className = "row";
+          const a = document.createElement("span"); a.textContent = k;
+          const c = document.createElement("b"); c.textContent = v;
+          r.append(a, c); b.appendChild(r);
+        });
+      };
+      if (!res.done.length && !res.skipped.length){
+        const p = document.createElement("div"); p.className = "tip";
+        p.textContent = t("ocrNone");
+        b.appendChild(p);
+      }
+      list(t("ocrFilled"), res.done);
+      list(t("ocrKept"), res.skipped);
+      const tip = document.createElement("div"); tip.className = "tip";
+      tip.textContent = t("ocrTip") + (found.hp ? " " + t("ocrHp") : "");
+      b.appendChild(tip);
+      const ok = document.createElement("div"); ok.className = "ok"; ok.textContent = t("ok");
+      ok.onclick = () => { $("mod").style.display = "none"; resolve(); };
+      b.appendChild(ok);
+      $("mod").style.display = "grid";
+    });
+  }
+
+  async function ocrFill(specs, file){
+    if (!admin || !file || !(file.type || "").startsWith("image/")) return;
+    toast(t("ocrReading"), 0);
+    let text;
+    try { text = await ocrText(file); }
+    catch(e){
+      console.error(e);
+      toast(t("ocrFail"), 6000);
+      return;
+    }
+    toast("");
+    const found = parsePlate(text);
+    const res = applySpecs(specs, found);
+    saveTree();
+    render();
+    await showResult(res, found);
+  }
+
+  /* ===== Equipment page ===== */
+  function openEquip(id){
+    eqOpen = id;
+    history.pushState({p:[...path], e:id, r:null}, "");
+    render(); window.scrollTo(0,0);
+  }
+  function renameEquip(q){
+    const n = (prompt(t("eqName"), q.name) || "").trim();
+    if (!n) return;
+    q.name = n; saveTree(); render();
+  }
+  function removeEquip(node, q){
+    if (!confirm(t("delEqQ", q.name))) return;
+    [...q.photos, ...q.files].forEach(f => dbDel(f.id));
+    node.equip.splice(node.equip.indexOf(q), 1);
+    saveTree();
+    if (eqOpen === q.id){ eqOpen = null; history.back(); } else render();
+  }
+  function renderEquip(node, q){
+    ensureEq(q);
+    const d = $("detail");
+    d.innerHTML = "";
+    const re = () => renderEquip(node, q);
+
+    if (admin){
+      const bar = document.createElement("div");
+      bar.className = "pbtns";
+      bar.append(
+        pbtn(t("renameBtn"), () => renameEquip(q)),
+        pbtn(t("delEq"), () => removeEquip(node, q), "red")
+      );
+      d.appendChild(bar);
+    }
+
+    const ds = section(t("desc"));
+    if (admin){
+      const ta = document.createElement("textarea");
+      ta.className = "desc"; ta.value = q.desc; ta.placeholder = t("descPh");
+      ta.oninput = () => { q.desc = ta.value; saveTree(); };
+      ds.appendChild(ta);
+    } else {
+      const v = document.createElement("div");
+      v.className = "descv"; v.textContent = q.desc || "—";
+      ds.appendChild(v);
+    }
+    d.appendChild(ds);
+
+    d.appendChild(specsBlock(q.specs, t("techSpecs"), re));
+    d.appendChild(filesBlock(q.photos, t("photos"), "image/*", f => ocrFill(q.specs, f)));
+    d.appendChild(filesBlock(q.files, t("filesTitle"), ACCEPT_DOCS));
+  }
+
+  /* ===== Files block (images / PDF / Excel / docs) ===== */
+  function kind(f){
+    if ((f.type||"").startsWith("image/")) return "img";
+    if (/pdf/i.test(f.type||"") || /\.pdf$/i.test(f.name)) return "pdf";
+    if (/\.(xls|xlsx|xlsm|csv)$/i.test(f.name) || /sheet|excel|csv/i.test(f.type||"")) return "xls";
+    if (/\.(doc|docx)$/i.test(f.name)) return "doc";
+    if (/\.(dwg|dxf)$/i.test(f.name)) return "cad";
+    return "file";
+  }
+  const KIND_ICON = {pdf:"📕", xls:"📗", doc:"📘", cad:"📐", file:"📄"};
+  const fmtSize = b => b >= 1048576 ? (b/1048576).toFixed(1) + " MB" : Math.max(1, Math.round(b/1024)) + " KB";
+
+  /* file name used for downloads (photos are stored as JPEG, so the extension is fixed to match) */
+  function dlName(f){
+    let n = f.name || "file";
+    const ty = f.type || "";
+    if (ty.startsWith("image/")){
+      const ext = ty === "image/png" ? ".png" : ty === "image/webp" ? ".webp" : ty === "image/gif" ? ".gif" : ".jpg";
+      n = n.replace(/\.[^.]+$/, "") + ext;
+    }
+    return n;
+  }
+  async function downloadFile(f){
+    const b = await dbGet(f.id);
+    if (!b){ alert(t("notFound")); return; }
+    dl(new Blob([b], {type: f.type || b.type}), dlName(f));
+  }
+
+  function filesBlock(arr, title, accept, onImg){
+    const sec = section(title);
+    const grid = document.createElement("div");
+    grid.className = "fgrid";
+
+    arr.forEach(f=>{
+      const it = document.createElement("div");
+      it.className = "fitem";
+      const th = document.createElement("div");
+      th.className = "thumb";
+      const k = kind(f);
+      if (k === "img"){
+        const im = document.createElement("img");
+        th.appendChild(im);
+        dbGet(f.id).then(b => { if (b) im.src = URL.createObjectURL(b); });
+      } else th.textContent = KIND_ICON[k] || "📄";
+      const nm = document.createElement("div");
+      nm.className = "fname"; nm.textContent = f.name;
+      const x = document.createElement("span");
+      x.className = "fdel"; x.textContent = "🗑";
+      x.onclick = e => { e.stopPropagation(); if (admin) removeFile(arr, f); };
+      const dlb = document.createElement("span");
+      dlb.className = "fdl"; dlb.textContent = "⬇️"; dlb.title = t("dlTitle");
+      dlb.onclick = e => { e.stopPropagation(); downloadFile(f); };
+      it.append(th, nm);
+      if (f.size){
+        const sz = document.createElement("div");
+        sz.className = "fsize"; sz.textContent = fmtSize(f.size);
+        it.appendChild(sz);
+      }
+      it.append(x, dlb);
+      it.onclick = () => openFile(f);
+      grid.appendChild(it);
+    });
+
+    if (!arr.length && !admin){
+      const e = document.createElement("div");
+      e.className = "nofile"; e.textContent = t("noFiles");
+      grid.appendChild(e);
+    }
+
+    const tile = document.createElement("div");
+    tile.className = "ftile"; tile.textContent = "+";
+    const inp = document.createElement("input");
+    inp.type = "file"; inp.multiple = true; inp.accept = accept || ACCEPT; inp.style.display = "none";
+    inp.onchange = () => { if (admin && inp.files.length) addFiles(arr, [...inp.files], onImg); };
+    tile.onclick = () => inp.click();
+    grid.append(tile, inp);
+
+    sec.appendChild(grid);
+    return sec;
+  }
+
+  function imgBlob(file, max){
+    return new Promise(res => {
+      const img = new Image();
+      img.onload = () => {
+        const r = Math.min(1, max / Math.max(img.width, img.height));
+        const c = document.createElement("canvas");
+        c.width = Math.round(img.width * r); c.height = Math.round(img.height * r);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(img.src);
+        c.toBlob(b => res(b || file), "image/jpeg", 0.9);
+      };
+      img.onerror = () => res(file);
+      img.src = URL.createObjectURL(file);
+    });
+  }
+  async function addFiles(arr, files, onImg){
+    const imgs = [];
+    for (const f of files){
+      if (!(await okToStore(f))) continue;
+      let blob = f, type = f.type;
+      if ((f.type||"").startsWith("image/")){ blob = await imgBlob(f, 2400); type = "image/jpeg"; }
+      const id = uid();
+      try { await dbPut(id, blob); } catch(e){ alert(t("saveFail")); continue; }
+      arr.push({id, name: f.name, type, size: f.size});
+      if (onImg && (f.type||"").startsWith("image/")) imgs.push(f);
+    }
+    saveTree(); render();
+    for (const f of imgs) await onImg(f);          // read each new photo (one after the other)
+  }
+  async function removeFile(arr, f){
+    if (!confirm(t("delFileQ", f.name))) return;
+    await dbDel(f.id);
+    arr.splice(arr.indexOf(f), 1);
+    saveTree(); render();
+  }
+  async function openFile(f){
+    const b = await dbGet(f.id);
+    if (!b){ alert(t("notFound")); return; }
+    const url = URL.createObjectURL(new Blob([b], {type: f.type || b.type}));
+    const k = kind(f);
+    if (k === "img"){ openLightbox(url, dlName(f)); return; }
+    if (k === "pdf"){ if (window.open(url, "_blank")) return; }
+    const a = document.createElement("a");
+    a.href = url; a.download = dlName(f); a.click();
+  }
+
+  /* ===== Fullscreen viewer with zoom (pinch, double tap, wheel) and a download button ===== */
+  let Z = {s:1, x:0, y:0}, pts = new Map(), startDist = 1, startS = 1, lastTap = 0, lbUrl = null, lbName = "";
+  const clampZ = v => Math.min(8, Math.max(1, v));
+  const applyZ = () => { $("lbImg").style.transform = `translate(${Z.x}px,${Z.y}px) scale(${Z.s})`; };
+  function openLightbox(url, name){
+    Z = {s:1, x:0, y:0}; pts.clear(); applyZ();
+    lbUrl = url; lbName = name || "photo.jpg";
+    $("lbImg").src = url;
+    $("lb").style.display = "grid";
+  }
+  function closeLightbox(){
+    $("lb").style.display = "none";
+    $("lbImg").removeAttribute("src");
+    lbUrl = null;
+  }
+  $("lbClose").onclick = closeLightbox;
+  $("lbDl").onclick = e => {
+    e.stopPropagation();
+    if (!lbUrl) return;
+    const a = document.createElement("a");
+    a.href = lbUrl; a.download = lbName;
+    document.body.appendChild(a); a.click(); a.remove();
+  };
+  $("lb").addEventListener("click", e => { if (e.target === $("lb")) closeLightbox(); });
+
+  const li = $("lbImg");
+  li.addEventListener("pointerdown", e => {
+    li.setPointerCapture(e.pointerId);
+    pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    if (pts.size === 2){
+      const [a,b] = [...pts.values()];
+      startDist = Math.hypot(a.x-b.x, a.y-b.y) || 1; startS = Z.s;
+    }
+    const now = Date.now();
+    if (pts.size === 1 && now - lastTap < 300){
+      Z = Z.s > 1 ? {s:1, x:0, y:0} : {s:2.5, x:0, y:0};
+      applyZ();
+    }
+    lastTap = now;
+  });
+  li.addEventListener("pointermove", e => {
+    const p = pts.get(e.pointerId);
+    if (!p) return;
+    const dx = e.clientX - p.x, dy = e.clientY - p.y;
+    p.x = e.clientX; p.y = e.clientY;
+    if (pts.size === 2){
+      const [a,b] = [...pts.values()];
+      Z.s = clampZ(startS * Math.hypot(a.x-b.x, a.y-b.y) / startDist);
+    } else if (Z.s > 1){
+      Z.x += dx; Z.y += dy;
+    }
+    if (Z.s <= 1){ Z.x = 0; Z.y = 0; }
+    applyZ();
+  });
+  const upZ = e => { pts.delete(e.pointerId); };
+  li.addEventListener("pointerup", upZ);
+  li.addEventListener("pointercancel", upZ);
+  $("lb").addEventListener("wheel", e => {
+    e.preventDefault();
+    Z.s = clampZ(Z.s * (e.deltaY < 0 ? 1.15 : 0.87));
+    if (Z.s <= 1){ Z.x = 0; Z.y = 0; }
+    applyZ();
+  }, {passive:false});
+
+  /* ================================================================
+     REPORTS: data is read live from the stored tree
+     Available to the admin and to users the admin allowed.
+     Zones / rooms / panels:
+       - motors report: all parameters of every motor, grouped by panel, with total current and power
+       - photo reports (motors + equipment)
+     Panels: also the equipment report
+     ================================================================ */
+  const byName = (a,b) => a.name.localeCompare(b.name, undefined, {numeric:true});
+  const r2 = x => Math.round(x*100)/100;
+  const fmtN = v => v == null ? "—" : String(r2(v));
+  const num = v => { const m = String(v||"").replace(",",".").match(/-?\d+(?:\.\d+)?/); return m ? parseFloat(m[0]) : null; };
+  const findSpec = (m, re, not) => { const s = m.specs.find(x => re.test(x.k) && !(not && not.test(x.k))); return s ? s.v : ""; };
+  const motorA  = m => num(findSpec({specs: m.specs || []}, CUR_RE));
+  const motorKW = m => num(findSpec({specs: m.specs || []}, POW_RE, PF_RE));
+  const esc = s => String(s==null ? "" : s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const safe = s => String(s).replace(/[^\w\-]+/g, "_");
+  const today = () => new Date().toISOString().slice(0,10);
+  const stamp = () => isRTL() ? new Date().toLocaleString("fa-IR-u-nu-latn") : new Date().toLocaleString("en-GB");
+  const colName = i => { let s = ""; i++; while (i > 0){ const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; };
+
+  /* motors report: one table, one column per parameter, panels as group rows, totals only for power and current */
+  function dataMotors(node){
+    const depth = path.length;
+    const panels = [];
+    const rec = (n, d, names) => {
+      if (d === 3){ panels.push({p:n, loc:names.slice(0, -1).join("  ›  ")}); return; }
+      [...(n.children || [])].sort(byName).forEach(c => rec(c, d + 1, [...names, c.name]));
+    };
+    rec(node, depth, crumbArr());
+
+    const all = [];
+    const gs = panels.map(({p, loc}) => {
+      const ms = [...(p.children || [])].sort(byName);
+      ms.forEach(m => { ensure(m); all.push(m); });
+      return {name:p.name, loc, ms};
+    }).filter(g => g.ms.length);
+
+    /* columns = every parameter that has a value in at least one motor (power and current are always kept) */
+    const seen = new Map();
+    all.forEach(m => m.specs.forEach(s => {
+      if (!seen.has(s.k)) seen.set(s.k, false);
+      if (String(s.v || "").trim()) seen.set(s.k, true);
+    }));
+    const cols = [];
+    let powDone = false, curDone = false;
+    seen.forEach((has, k) => {
+      const isPow = POW_RE.test(k) && !PF_RE.test(k), isCur = CUR_RE.test(k);
+      if (!has && !isPow && !isCur) return;
+      const c = {k, label:specLabel(k), tot:""};
+      if (isPow && !powDone){ c.tot = "kw"; powDone = true; }
+      else if (isCur && !curDone){ c.tot = "a"; curDone = true; }
+      cols.push(c);
+    });
+
+    let a = 0, kw = 0, idx = 0;
+    const groups = gs.map(g => ({
+      name:g.name, loc:g.loc,
+      rows:g.ms.map(m => {
+        const A = motorA(m), K = motorKW(m);
+        if (A != null) a += A;
+        if (K != null) kw += K;
+        return {i:++idx, name:m.name, vals:cols.map(c => {
+          const s = m.specs.find(x => x.k === c.k);
+          return String((s && s.v) || "").trim() || "—";
+        })};
+      })
+    }));
+    return {kind:"motors", title:t("repMotorsTitle", node.name), sub:crumbs(), date:stamp(),
+            base:`${safe(node.name)}_motors_report_${today()}`,
+            cols, groups, total:{count:idx, a:r2(a), kw:r2(kw)}};
+  }
+  function dataEquip(panel){
+    const ms = [...panel.children].sort(byName);
+    return {kind:"equip", title:t("repEquipTitle", panel.name), sub:crumbs(), date:stamp(),
+            base:`${safe(panel.name)}_equipment_report_${today()}`,
+            motors: ms.map(m => {
+              ensure(m);
+              return {name:m.name, equip:[...m.equip].sort(byName).map(q => {
+                ensureEq(q);
+                return {name:q.name, desc:q.desc, specs:q.specs.map(s => [specLabel(s.k), s.v || "—"]), photos:q.photos, files:q.files};
+              })};
+            })};
+  }
+
+  /* all motors under a zone / room / panel (depth = path length of node) */
+  function collectMotors(node, depth){
+    const out = [];
+    const rec = (n, d, names) => {
+      if (d === MOTOR_DEPTH){ ensure(n); out.push({m:n, loc:names.slice(0, -1).join("  ›  ")}); return; }
+      [...(n.children || [])].sort(byName).forEach(c => rec(c, d + 1, [...names, c.name]));
+    };
+    rec(node, depth, crumbArr());
+    return out;
+  }
+  /* photo reports: mode "motor" = nameplate + technical-spec photos, mode "equip" = equipment photos */
+  function dataPhotos(node, mode){
+    const ms = collectMotors(node, path.length);
+    const groups = ms.map(({m, loc}) => {
+      const items = [];
+      if (mode === "motor"){
+        if (m.plate) items.push({cap:t("plateAlt"), f:m.plate});
+        (m.specFiles || []).filter(f => kind(f) === "img").forEach(f => items.push({cap:f.name, f}));
+      } else {
+        [...m.equip].sort(byName).forEach(q => {
+          ensureEq(q);
+          q.photos.forEach(f => items.push({cap:q.name + (f.name ? " – " + f.name : ""), f}));
+        });
+      }
+      return {name:m.name, loc, items};
+    }).filter(g => g.items.length);
+    const total = groups.reduce((a, g) => a + g.items.length, 0);
+    return {kind:"photos", mode,
+            title:t(mode === "motor" ? "repPhotoMotorTitle" : "repPhotoEquipTitle", node.name),
+            sub:crumbs(), date:stamp(),
+            base:`${safe(node.name)}_${mode === "motor" ? "motor" : "equipment"}_photos_${today()}`,
+            groups, total};
+  }
+
+  function openRep(k){
+    if (!canReport()) return;
+    rep = k;
+    history.pushState({p:[...path], e:null, r:k}, "");
+    render(); window.scrollTo(0,0);
+  }
+
+  function renderReports(node){
+    const d = $("detail");
+    d.innerHTML = "";
+    const atPanel = path.length === 3;
+    if (rep === "equip" && !atPanel) rep = "menu";
+    if (rep === "menu"){
+      const list = [["📋",t("rMotors"),t("rMotorsDesc"),"motors"]];
+      if (atPanel) list.push(["🧰",t("rEquip"),t("rEquipDesc"),"equip"]);
+      list.push(["📷",t("rPhotoMotor"),t("rPhotoMotorDesc"),"pmotor"],
+                ["🖼️",t("rPhotoEquip"),t("rPhotoEquipDesc"),"pequip"]);
+      list.forEach(([ic,title,s,k]) => {
+        const row = document.createElement("div");
+        row.className = "eqrow";
+        const n = document.createElement("div");
+        n.className = "n"; n.textContent = ic + " " + title;
+        const sm = document.createElement("small"); sm.textContent = s;
+        n.appendChild(sm);
+        const go = document.createElement("span"); go.className = "go"; go.textContent = "›";
+        row.append(n, go);
+        row.onclick = () => openRep(k);
+        d.appendChild(row);
+      });
+      return;
+    }
+    if (rep === "motors") return viewMotors(d, dataMotors(node));
+    if (rep === "pmotor") return viewPhotos(d, dataPhotos(node, "motor"));
+    if (rep === "pequip") return viewPhotos(d, dataPhotos(node, "equip"));
+    viewEquip(d, dataEquip(node));
+  }
+
+  function exportBar(D){
+    const bar = document.createElement("div");
+    bar.className = "rhead";
+    [["📗 Excel","x", async () => dl(D.kind === "photos" ? await xlsxPhotosBlob(D) : xlsxBlob(D), D.base + ".xlsx")],
+     ["📕 PDF","p",   () => exportPDF(D)],
+     ["📘 Word","w",  async () => dl(await docxBlob(D), D.base + ".docx")]
+    ].forEach(([txt,c,fn]) => {
+      const b = document.createElement("div");
+      b.className = "rexp " + c; b.textContent = txt;
+      b.onclick = async () => {
+        if (b.dataset.busy) return;
+        b.dataset.busy = "1"; b.textContent = "…";
+        toast(t("repPrep"), 0);
+        try { await fn(); } catch(e){ console.error(e); alert(t("exportFail")); }
+        toast("");
+        b.textContent = txt; delete b.dataset.busy;
+      };
+      bar.appendChild(b);
+    });
+    return bar;
+  }
+  function metaBlock(D){
+    const m = document.createElement("div");
+    m.className = "rmeta";
+    m.textContent = D.sub + "  ·  " + D.date;
+    return m;
+  }
+
+  function viewMotors(d, D){
+    d.appendChild(exportBar(D));
+    d.appendChild(metaBlock(D));
+    if (!D.groups.length){
+      const e = document.createElement("div");
+      e.className = "empty"; e.style.gridColumn = "auto"; e.textContent = t("noMotors");
+      d.appendChild(e);
+      return;
+    }
+    const span = 2 + D.cols.length;
+    const wrap = document.createElement("div");
+    wrap.className = "rwrap";
+    const tb_ = document.createElement("table");
+    tb_.className = "rt wide";
+    const th = document.createElement("thead");
+    th.innerHTML = `<tr><th>#</th><th class="l">${esc(t("thMotor"))}</th>${D.cols.map(c => `<th>${esc(c.label)}</th>`).join("")}</tr>`;
+    const tb = document.createElement("tbody");
+    D.groups.forEach(g => {
+      const gr = document.createElement("tr");
+      gr.className = "grp";
+      gr.innerHTML = `<td colspan="${span}">🗄️ ${esc(g.name)}${g.loc ? "  ·  " + esc(g.loc) : ""}</td>`;
+      tb.appendChild(gr);
+      g.rows.forEach(x => {
+        const tr = document.createElement("tr");
+        [[x.i,""],[x.name,"l"],...x.vals.map(v => [v,""])].forEach(([v,c]) => {
+          const td = document.createElement("td"); td.className = c; td.textContent = v; tr.appendChild(td);
+        });
+        tb.appendChild(tr);
+      });
+    });
+    const tf = document.createElement("tfoot");
+    const fr = document.createElement("tr");
+    [[D.total.count,""],[t("totalMotors"),"l"],
+     ...D.cols.map(c => [c.tot === "kw" ? D.total.kw : c.tot === "a" ? D.total.a : "", ""])].forEach(([v,c]) => {
+      const td = document.createElement("td"); td.className = c; td.textContent = v; fr.appendChild(td);
+    });
+    tf.appendChild(fr);
+    tb_.append(th, tb, tf);
+    wrap.appendChild(tb_);
+    d.appendChild(wrap);
+    const note = document.createElement("div");
+    note.className = "rnote";
+    note.textContent = t("motorsNote");
+    d.appendChild(note);
+  }
+
+  function viewEquip(d, D){
+    d.appendChild(exportBar(D));
+    d.appendChild(metaBlock(D));
+    if (!D.motors.length){
+      const e = document.createElement("div");
+      e.className = "empty"; e.style.gridColumn = "auto"; e.textContent = t("noMotors");
+      d.appendChild(e);
+    }
+    D.motors.forEach(m => {
+      const box = document.createElement("div");
+      box.className = "rmotor";
+      const hh = document.createElement("h4");
+      hh.textContent = "⚙️ " + m.name;
+      const sm = document.createElement("small"); sm.textContent = t("nEquip", m.equip.length);
+      hh.appendChild(sm);
+      const body = document.createElement("div");
+      body.className = "body";
+      if (!m.equip.length){
+        const n = document.createElement("div"); n.className = "none"; n.textContent = t("noEquipReg");
+        body.appendChild(n);
+      }
+      m.equip.forEach(q => {
+        const det = document.createElement("details");
+        det.className = "req";
+        const su = document.createElement("summary");
+        su.textContent = "🧰 " + q.name;
+        const s2 = document.createElement("small");
+        s2.textContent = t("specsPhotos", q.specs.length, q.photos.length);
+        su.appendChild(s2);
+        det.appendChild(su);
+        const inn = document.createElement("div");
+        inn.className = "in";
+        if (q.desc){
+          const dv = document.createElement("div"); dv.className = "descv"; dv.textContent = q.desc;
+          inn.appendChild(dv);
+        }
+        if (q.specs.length){
+          const w = document.createElement("div"); w.className = "rwrap";
+          const t_ = document.createElement("table"); t_.className = "rt";
+          t_.innerHTML = `<thead><tr><th class="l">${esc(t("thParam"))}</th><th class="l">${esc(t("thValue"))}</th></tr></thead>`;
+          const tb = document.createElement("tbody");
+          q.specs.forEach(([k,v]) => {
+            const tr = document.createElement("tr");
+            [k,v].forEach(x => { const td = document.createElement("td"); td.className = "l"; td.textContent = x; tr.appendChild(td); });
+            tb.appendChild(tr);
+          });
+          t_.appendChild(tb); w.appendChild(t_); inn.appendChild(w);
+        }
+        const g = document.createElement("div");
+        g.className = "fgrid";
+        q.photos.forEach(f => {
+          const it = document.createElement("div"); it.className = "fitem";
+          const thb = document.createElement("div"); thb.className = "thumb";
+          const im = document.createElement("img"); thb.appendChild(im);
+          dbGet(f.id).then(b => { if (b){ const u = URL.createObjectURL(b); im.src = u; it.onclick = () => openLightbox(u, dlName(f)); } });
+          it.appendChild(thb); g.appendChild(it);
+        });
+        if (!q.photos.length){
+          const e = document.createElement("div"); e.className = "nofile"; e.textContent = t("noPhotos");
+          g.appendChild(e);
+        }
+        inn.appendChild(g);
+        det.appendChild(inn);
+        body.appendChild(det);
+      });
+      box.append(hh, body);
+      d.appendChild(box);
+    });
+  }
+
+  /* photo report on screen: all photos of the motors under this zone / room / panel */
+  function viewPhotos(d, D){
+    d.appendChild(exportBar(D));
+    d.appendChild(metaBlock(D));
+    const note = document.createElement("div");
+    note.className = "rnote";
+    note.style.margin = "0 0 12px";
+    note.textContent = t("photosCount", D.total) + "  ·  " + t("photosNote");
+    d.appendChild(note);
+    if (!D.groups.length){
+      const e = document.createElement("div");
+      e.className = "empty"; e.style.gridColumn = "auto"; e.textContent = t("noPhotosAll");
+      d.appendChild(e);
+      return;
+    }
+    D.groups.forEach(g => {
+      const box = document.createElement("div");
+      box.className = "rmotor";
+      const hh = document.createElement("h4");
+      hh.textContent = "⚙️ " + g.name;
+      const sm = document.createElement("small"); sm.textContent = t("photosCount", g.items.length);
+      hh.appendChild(sm);
+      const body = document.createElement("div");
+      body.className = "body";
+      const loc = document.createElement("div");
+      loc.className = "rnote"; loc.style.margin = "0 0 8px"; loc.textContent = g.loc;
+      const grid = document.createElement("div");
+      grid.className = "fgrid";
+      g.items.forEach(it => {
+        const el = document.createElement("div"); el.className = "fitem";
+        const thb = document.createElement("div"); thb.className = "thumb";
+        const im = document.createElement("img"); thb.appendChild(im);
+        dbGet(it.f.id).then(b => { if (b){ const u = URL.createObjectURL(b); im.src = u; el.onclick = () => openLightbox(u, dlName(it.f)); } });
+        const cp = document.createElement("div"); cp.className = "fcap"; cp.textContent = it.cap;
+        el.append(thb, cp);
+        grid.appendChild(el);
+      });
+      body.append(loc, grid);
+      box.append(hh, body);
+      d.appendChild(box);
+    });
+  }
+
+  /* ---------- download + image helpers ---------- */
+  function dl(blob, name){
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 30000);
+  }
+  async function thumb(id, max){            // → {blob, w, h} (JPEG)
+    const b = await dbGet(id);
+    if (!b) return null;
+    const u = URL.createObjectURL(b);
+    const img = await new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = u; });
+    if (!img){ URL.revokeObjectURL(u); return null; }
+    const r = Math.min(1, max / Math.max(img.width, img.height));
+    const c = document.createElement("canvas");
+    c.width = Math.max(1, Math.round(img.width*r)); c.height = Math.max(1, Math.round(img.height*r));
+    const x = c.getContext("2d");
+    x.fillStyle = "#fff"; x.fillRect(0,0,c.width,c.height);
+    x.drawImage(img, 0, 0, c.width, c.height);
+    URL.revokeObjectURL(u);
+    const blob = await new Promise(res => c.toBlob(res, "image/jpeg", 0.82));
+    return {blob, w:c.width, h:c.height};
+  }
+
+  /* ---------- minimal ZIP writer (no compression) for xlsx / docx ---------- */
+  const CRC = (() => { const tt = new Uint32Array(256); for (let n=0;n<256;n++){ let c=n; for (let k=0;k<8;k++) c = c&1 ? 0xEDB88320^(c>>>1) : c>>>1; tt[n]=c>>>0; } return tt; })();
+  const crc32 = u => { let c = 0xFFFFFFFF; for (let i=0;i<u.length;i++) c = CRC[(c^u[i])&255]^(c>>>8); return (c^0xFFFFFFFF)>>>0; };
+  function makeZip(files, mime){
+    const enc = new TextEncoder(), parts = [], cen = [];
+    const u16 = n => [n&255,(n>>8)&255], u32 = n => [n&255,(n>>8)&255,(n>>16)&255,(n>>>24)&255];
+    let off = 0;
+    files.forEach(f => {
+      const nm = enc.encode(f.name), d = typeof f.data === "string" ? enc.encode(f.data) : f.data, c = crc32(d);
+      const lh = new Uint8Array([0x50,0x4b,3,4, ...u16(20), ...u16(0x0800), ...u16(0), ...u16(0), ...u16(0x21),
+        ...u32(c), ...u32(d.length), ...u32(d.length), ...u16(nm.length), ...u16(0)]);
+      parts.push(lh, nm, d);
+      cen.push(new Uint8Array([0x50,0x4b,1,2, ...u16(20), ...u16(20), ...u16(0x0800), ...u16(0), ...u16(0), ...u16(0x21),
+        ...u32(c), ...u32(d.length), ...u32(d.length), ...u16(nm.length), ...u16(0), ...u16(0), ...u16(0), ...u16(0),
+        ...u32(0), ...u32(off)]), nm);
+      off += lh.length + nm.length + d.length;
+    });
+    let cs = 0; cen.forEach(p => cs += p.length);
+    const end = new Uint8Array([0x50,0x4b,5,6, ...u16(0), ...u16(0), ...u16(files.length), ...u16(files.length),
+      ...u32(cs), ...u32(off), ...u16(0)]);
+    return new Blob([...parts, ...cen, end], {type:mime});
+  }
+  const XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
+
+  /* ---------- Excel (.xlsx) ---------- */
+  function xlsxStyles(){
+    const bd = '<border><left style="thin"><color rgb="FFB9C8EA"/></left><right style="thin"><color rgb="FFB9C8EA"/></right><top style="thin"><color rgb="FFB9C8EA"/></top><bottom style="thin"><color rgb="FFB9C8EA"/></bottom><diagonal/></border>';
+    const fill = c => `<fill><patternFill patternType="solid"><fgColor rgb="FF${c}"/><bgColor indexed="64"/></patternFill></fill>`;
+    return XML + `<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+<numFmts count="1"><numFmt numFmtId="164" formatCode="0.00"/></numFmts>
+<fonts count="5"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="16"/><color rgb="FF1F3A7A"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font><font><i/><sz val="10"/><color rgb="FF6D7FA6"/><name val="Calibri"/></font></fonts>
+<fills count="4"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>${fill("4A80E8")}${fill("E8EEFB")}</fills>
+<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border>${bd}</borders>
+<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+<cellXfs count="11">
+<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
+<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"><alignment vertical="center"/></xf>
+<xf numFmtId="0" fontId="2" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>
+<xf numFmtId="164" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="top"/></xf>
+<xf numFmtId="0" fontId="3" fillId="3" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>
+<xf numFmtId="164" fontId="3" fillId="3" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+<xf numFmtId="0" fontId="4" fillId="0" borderId="0" xfId="0" applyFont="1"/>
+<xf numFmtId="0" fontId="3" fillId="3" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>
+<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="top"/></xf>
+<xf numFmtId="1" fontId="3" fillId="3" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+</cellXfs></styleSheet>`;
+  }
+  /* wraps one worksheet into an .xlsx file; extra = pictures (drawing, media, relationships) */
+  function xlsxZip(sheet, extraFiles = [], extraTypes = ""){
+    return makeZip([
+      {name:"[Content_Types].xml", data: XML + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>' + extraTypes + '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'},
+      {name:"_rels/.rels", data: XML + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'},
+      {name:"xl/workbook.xml", data: XML + '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Report" sheetId="1" r:id="rId1"/></sheets></workbook>'},
+      {name:"xl/_rels/workbook.xml.rels", data: XML + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'},
+      {name:"xl/styles.xml", data: xlsxStyles()},
+      {name:"xl/worksheets/sheet1.xml", data: sheet},
+      ...extraFiles
+    ], "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  }
+
+  function xlsxBlob(D){
+    const out = [], merges = [];
+    let r = 1, widths, ncol;
+    const cell = (c, v, s) => typeof v === "number"
+      ? `<c r="${colName(c)}${r}" s="${s}"><v>${v}</v></c>`
+      : `<c r="${colName(c)}${r}" s="${s}" t="inlineStr"><is><t xml:space="preserve">${esc(v)}</t></is></c>`;
+    const row = (cells, ht) => { out.push(`<row r="${r}"${ht ? ` ht="${ht}" customHeight="1"` : ""}>${cells.map((x,i) => cell(i, x[0], x[1])).join("")}</row>`); r++; };
+    const merge = () => merges.push(`A${r-1}:${colName(ncol-1)}${r-1}`);
+    const blank = (n, s = 1) => Array.from({length:n}, () => ["", s]);
+
+    if (D.kind === "motors"){
+      ncol = 2 + D.cols.length;
+      widths = [6, 22, ...D.cols.map(c => c.k.length > 14 ? 22 : 16)];
+      row([[D.title,1], ...blank(ncol - 1)], 28); merge();
+      row([[D.sub + "  ·  " + D.date,7], ...blank(ncol - 1, 7)]); merge();
+      r++;
+      row([["#",2],[t("thMotor"),2], ...D.cols.map(c => [c.label,2])], 22);
+      D.groups.forEach(g => {
+        row([["🗄 " + g.name + (g.loc ? "  –  " + g.loc : ""),8], ...blank(ncol - 1, 8)], 20); merge();
+        g.rows.forEach(x => row([[x.i,9],[x.name,3], ...x.vals.map(v => [v,3])]));
+      });
+      row([[D.total.count,10],[t("totalMotors"),5],
+           ...D.cols.map(c => c.tot === "kw" ? [D.total.kw,6] : c.tot === "a" ? [D.total.a,6] : ["",5])], 22);
+    } else {
+      ncol = 5; widths = [16,24,28,36,14];
+      row([[D.title,1], ...blank(4)], 28); merge();
+      row([[D.sub + "  ·  " + D.date,7], ...blank(4, 7)]); merge();
+      r++;
+      row([[t("thMotor"),2],[t("tEquip"),2],[t("thParam"),2],[t("thValue"),2],[t("xPhotos"),2]], 22);
+      D.motors.forEach(m => {
+        row([[m.name,8], ...blank(4, 8)], 20); merge();
+        if (!m.equip.length) row([["",3],[t("noEquipReg"),3],["",3],["",3],["",3]]);
+        m.equip.forEach(q => {
+          const lines = [];
+          if (q.desc) lines.push([t("desc"), q.desc]);
+          q.specs.forEach(s => lines.push(s));
+          if (!lines.length) lines.push(["—","—"]);
+          lines.forEach((ln,i) => row([["",3],[i===0 ? q.name : "",3],[ln[0],3],[ln[1],3],[i===0 ? q.photos.length : "", i===0 ? 9 : 3]]));
+        });
+      });
+    }
+    const orient = D.kind === "motors" ? "landscape" : "portrait";
+    const sheet = XML + `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><sheetViews><sheetView${isRTL() ? ' rightToLeft="1"' : ""} showGridLines="0" workbookViewId="0"/></sheetViews><cols>${widths.map((w,i) => `<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join("")}</cols><sheetData>${out.join("")}</sheetData><mergeCells count="${merges.length}">${merges.map(m => `<mergeCell ref="${m}"/>`).join("")}</mergeCells><pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/><pageSetup paperSize="9" orientation="${orient}" fitToWidth="1" fitToHeight="0"/></worksheet>`;
+    return xlsxZip(sheet);
+  }
+
+  /* Excel photo report: the photos themselves are embedded in the sheet */
+  async function xlsxPhotosBlob(D){
+    const out = [], merges = [], pics = [];
+    let r = 1, n = 0;
+    const cell = (c, v, s) => {
+      const ref = "AB"[c] + r;
+      return typeof v === "number"
+        ? `<c r="${ref}" s="${s}"><v>${v}</v></c>`
+        : `<c r="${ref}" s="${s}" t="inlineStr"><is><t xml:space="preserve">${esc(v)}</t></is></c>`;
+    };
+    const row = (cells, ht) => { out.push(`<row r="${r}"${ht ? ` ht="${ht}" customHeight="1"` : ""}>${cells.map((x,i) => cell(i, x[0], x[1])).join("")}</row>`); r++; };
+    const merge = () => merges.push(`A${r-1}:B${r-1}`);
+
+    row([[D.title,1],["",1]], 28); merge();
+    row([[D.sub + "  ·  " + D.date,7],["",7]]); merge();
+    r++;
+    row([[t("thItem"),2],[t("xPhotos"),2]], 22);
+    for (const g of D.groups){
+      row([[g.name + (g.loc ? "  –  " + g.loc : ""),8],["",8]], 20); merge();
+      for (const it of g.items){
+        const th_ = await thumb(it.f.id, 900);
+        if (!th_){ row([[it.cap,3],["—",9]]); continue; }
+        const k = Math.min(1, 250 / th_.w, 190 / th_.h);
+        const dw = Math.max(1, Math.round(th_.w * k)), dh = Math.max(1, Math.round(th_.h * k));
+        n++;
+        pics.push({n, row:r - 1, w:dw * 9525, h:dh * 9525, data:new Uint8Array(await th_.blob.arrayBuffer())});
+        row([[it.cap,3],["",3]], Math.round(dh * 0.75 + 10));
+      }
+    }
+    const sheet = XML + `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><sheetViews><sheetView${isRTL() ? ' rightToLeft="1"' : ""} showGridLines="0" workbookViewId="0"/></sheetViews><cols><col min="1" max="1" width="38" customWidth="1"/><col min="2" max="2" width="38" customWidth="1"/></cols><sheetData>${out.join("")}</sheetData><mergeCells count="${merges.length}">${merges.map(m => `<mergeCell ref="${m}"/>`).join("")}</mergeCells><pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/><pageSetup paperSize="9" orientation="portrait" fitToWidth="1" fitToHeight="0"/>${pics.length ? '<drawing r:id="rId1"/>' : ""}</worksheet>`;
+    if (!pics.length) return xlsxZip(sheet);
+
+    const REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+    const drawing = XML + '<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="' + REL + '">' +
+      pics.map(p => `<xdr:oneCellAnchor><xdr:from><xdr:col>1</xdr:col><xdr:colOff>57150</xdr:colOff><xdr:row>${p.row}</xdr:row><xdr:rowOff>47625</xdr:rowOff></xdr:from><xdr:ext cx="${p.w}" cy="${p.h}"/><xdr:pic><xdr:nvPicPr><xdr:cNvPr id="${p.n + 1}" name="Picture ${p.n}"/><xdr:cNvPicPr><a:picLocks noChangeAspect="1"/></xdr:cNvPicPr></xdr:nvPicPr><xdr:blipFill><a:blip r:embed="rId${p.n}"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill><xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${p.w}" cy="${p.h}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic><xdr:clientData/></xdr:oneCellAnchor>`).join("") +
+      '</xdr:wsDr>';
+    const extra = [
+      {name:"xl/drawings/drawing1.xml", data: drawing},
+      {name:"xl/drawings/_rels/drawing1.xml.rels", data: XML + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' + pics.map(p => `<Relationship Id="rId${p.n}" Type="${REL}/image" Target="../media/image${p.n}.jpg"/>`).join("") + '</Relationships>'},
+      {name:"xl/worksheets/_rels/sheet1.xml.rels", data: XML + `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${REL}/drawing" Target="../drawings/drawing1.xml"/></Relationships>`},
+      ...pics.map(p => ({name:`xl/media/image${p.n}.jpg`, data:p.data}))
+    ];
+    const types = '<Default Extension="jpg" ContentType="image/jpeg"/><Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>';
+    return xlsxZip(sheet, extra, types);
+  }
+
+  /* ---------- Word (.docx) with embedded photos ---------- */
+  async function docxBlob(D){
+    const rtl = isRTL();
+    const land = D.kind === "motors";        // the motors table is wide: landscape page
+    const media = [], rels = [];
+    let imgN = 0;
+    const run = (txt, o={}) => `<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="${rtl ? "Tahoma" : "Calibri"}"/>${o.b?"<w:b/>":""}${o.b&&rtl?"<w:bCs/>":""}${o.i?"<w:i/>":""}${o.i&&rtl?"<w:iCs/>":""}${o.color?`<w:color w:val="${o.color}"/>`:""}<w:sz w:val="${o.sz||20}"/>${rtl?`<w:szCs w:val="${o.sz||20}"/><w:rtl/>`:""}</w:rPr><w:t xml:space="preserve">${esc(txt)}</w:t></w:r>`;
+    const para = (inner, o={}) => `<w:p><w:pPr>${o.keep?"<w:keepNext/>":""}${o.fill?`<w:shd w:val="clear" w:color="auto" w:fill="${o.fill}"/>`:""}${rtl?"<w:bidi/>":""}<w:spacing w:before="${o.before||0}" w:after="${o.after==null?60:o.after}"/>${o.jc?`<w:jc w:val="${o.jc}"/>`:""}</w:pPr>${inner}</w:p>`;
+    const tc = (txt, w, o={}) => `<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>${o.fill?`<w:shd w:val="clear" w:color="auto" w:fill="${o.fill}"/>`:""}<w:vAlign w:val="center"/></w:tcPr>${para(run(txt,{b:o.b,color:o.color,sz:o.sz}),{jc:o.jc,after:0})}</w:tc>`;
+    const tr = (cells, head) => `<w:tr><w:trPr><w:cantSplit/>${head?"<w:tblHeader/>":""}</w:trPr>${cells}</w:tr>`;
+    const bdr = ["top","left","bottom","right","insideH","insideV"].map(s => `<w:${s} w:val="single" w:sz="4" w:space="0" w:color="B9C8EA"/>`).join("");
+    const tbl = (widths, rows) => `<w:tbl><w:tblPr>${rtl?"<w:bidiVisual/>":""}<w:tblW w:w="${widths.reduce((a,b)=>a+b,0)}" w:type="dxa"/><w:tblBorders>${bdr}</w:tblBorders><w:tblLayout w:type="fixed"/><w:tblCellMar><w:top w:w="60" w:type="dxa"/><w:left w:w="100" w:type="dxa"/><w:bottom w:w="60" w:type="dxa"/><w:right w:w="100" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>${widths.map(w => `<w:gridCol w:w="${w}"/>`).join("")}</w:tblGrid>${rows}</w:tbl>`;
+    const drawing = (n, cx, cy) => `<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${n}" name="Picture ${n}"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${n}" name="image${n}.jpg"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId${n}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`;
+
+    const body = [];
+    body.push(para(run(D.title,{b:1,sz:36,color:"1F3A7A"}), {after:40}));
+    body.push(para(run(D.sub + "  ·  " + D.date,{sz:18,color:"6D7FA6"}), {after:200}));
+
+    if (D.kind === "motors"){
+      /* all parameters as columns, panel names as full-width group rows, totals only under power and current */
+      const n = D.cols.length;
+      const pw = Math.max(650, Math.floor((15438 - 2100) / Math.max(1, n)));
+      const wd = [500, 1600, ...D.cols.map(() => pw)];
+      const sum = wd.reduce((a,b) => a + b, 0);
+      const fs = n > 12 ? 13 : n > 8 ? 15 : 17;
+      let rows = tr(["#", t("thMotor"), ...D.cols.map(c => c.label)].map((hd_,i) => tc(hd_, wd[i], {b:1,color:"FFFFFF",fill:"4A80E8",jc:"center",sz:fs})).join(""), true);
+      D.groups.forEach(g => {
+        rows += `<w:tr><w:trPr><w:cantSplit/></w:trPr><w:tc><w:tcPr><w:tcW w:w="${sum}" w:type="dxa"/><w:gridSpan w:val="${wd.length}"/><w:shd w:val="clear" w:color="auto" w:fill="1F3A7A"/><w:vAlign w:val="center"/></w:tcPr>${para(run("🗄  " + g.name + (g.loc ? "  –  " + g.loc : ""), {b:1,color:"FFFFFF",sz:fs + 2}), {after:0})}</w:tc></w:tr>`;
+        g.rows.forEach((x,i) => {
+          const f = i % 2 ? "F5F8FE" : null;
+          rows += tr(tc(String(x.i),wd[0],{jc:"center",fill:f,sz:fs}) + tc(x.name,wd[1],{fill:f,sz:fs}) +
+                     x.vals.map((v,j) => tc(v,wd[j+2],{jc:"center",fill:f,sz:fs})).join(""));
+        });
+      });
+      rows += tr(tc(String(D.total.count),wd[0],{b:1,jc:"center",fill:"E8EEFB",sz:fs}) + tc(t("totalMotors"),wd[1],{b:1,fill:"E8EEFB",sz:fs}) +
+                 D.cols.map((c,j) => tc(c.tot === "kw" ? String(D.total.kw) : c.tot === "a" ? String(D.total.a) : "", wd[j+2], {b:1,jc:"center",fill:"E8EEFB",sz:fs})).join(""));
+      body.push(tbl(wd, rows), para(""));
+    } else if (D.kind === "photos"){
+      /* two photos per row, each with its caption */
+      const colW = 4953;
+      if (!D.groups.length) body.push(para(run(t("noPhotosAll"),{i:1,color:"8A97B5"})));
+      for (const g of D.groups){
+        body.push(para(run("  ⚙  " + g.name,{b:1,sz:24,color:"FFFFFF"}), {fill:"1F3A7A", before:240, after:60, keep:1}));
+        if (g.loc) body.push(para(run(g.loc,{sz:16,color:"6D7FA6"}), {after:80, keep:1}));
+        const cells = [];
+        for (const it of g.items){
+          const th_ = await thumb(it.f.id, 900);
+          let inner = "";
+          if (th_){
+            imgN++;
+            media.push({name:`word/media/image${imgN}.jpg`, data:new Uint8Array(await th_.blob.arrayBuffer())});
+            rels.push(`<Relationship Id="rId${imgN}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image${imgN}.jpg"/>`);
+            const k = Math.min(2700000/th_.w, 2160000/th_.h);
+            inner += para(drawing(imgN, Math.round(th_.w*k), Math.round(th_.h*k)), {after:20, jc:"center"});
+          }
+          inner += para(run(it.cap,{sz:16,color:"444444"}), {after:0, jc:"center"});
+          cells.push(inner);
+        }
+        let rows = "";
+        for (let i = 0; i < cells.length; i += 2){
+          const c2 = cells[i+1] || para("", {after:0});
+          rows += `<w:tr><w:trPr><w:cantSplit/></w:trPr><w:tc><w:tcPr><w:tcW w:w="${colW}" w:type="dxa"/><w:vAlign w:val="center"/></w:tcPr>${cells[i]}</w:tc><w:tc><w:tcPr><w:tcW w:w="${colW}" w:type="dxa"/><w:vAlign w:val="center"/></w:tcPr>${c2}</w:tc></w:tr>`;
+        }
+        body.push(tbl([colW, colW], rows), para("", {after:60}));
+      }
+    } else {
+      const wd = [3400,6506];
+      for (const m of D.motors){
+        body.push(para(run("  ⚙  " + m.name,{b:1,sz:24,color:"FFFFFF"}), {fill:"1F3A7A", before:240, after:100, keep:1}));
+        if (!m.equip.length) body.push(para(run(t("noEquipReg"),{i:1,color:"8A97B5"})));
+        for (const q of m.equip){
+          body.push(para(run("🧰 " + q.name,{b:1,sz:22,color:"4A80E8"}), {before:120, after:60, keep:1}));
+          if (q.desc) body.push(para(run(q.desc,{i:1,sz:19,color:"444444"})));
+          if (q.specs.length){
+            let rows = tr(tc(t("thParam"),wd[0],{b:1,color:"FFFFFF",fill:"4A80E8"}) + tc(t("thValue"),wd[1],{b:1,color:"FFFFFF",fill:"4A80E8"}), true);
+            q.specs.forEach(([k,v],i) => { const f = i%2 ? "F5F8FE" : null; rows += tr(tc(k,wd[0],{fill:f}) + tc(v,wd[1],{fill:f})); });
+            body.push(tbl(wd, rows), para("", {after:60}));
+          }
+          let runs = "";
+          for (const f of q.photos){
+            const th_ = await thumb(f.id, 700);
+            if (!th_) continue;
+            imgN++;
+            media.push({name:`word/media/image${imgN}.jpg`, data:new Uint8Array(await th_.blob.arrayBuffer())});
+            rels.push(`<Relationship Id="rId${imgN}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image${imgN}.jpg"/>`);
+            const k = Math.min(1872000/th_.w, 1872000/th_.h);
+            runs += drawing(imgN, Math.round(th_.w*k), Math.round(th_.h*k)) + '<w:r><w:t xml:space="preserve">  </w:t></w:r>';
+          }
+          if (runs) body.push(para(runs, {after:120}));
+        }
+      }
+    }
+    const sect = land
+      ? '<w:sectPr><w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/><w:pgMar w:top="700" w:right="700" w:bottom="700" w:left="700" w:header="400" w:footer="400" w:gutter="0"/></w:sectPr>'
+      : '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1000" w:right="1000" w:bottom="1000" w:left="1000" w:header="500" w:footer="500" w:gutter="0"/></w:sectPr>';
+    const doc = XML + `<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><w:body>${body.join("")}${sect}</w:body></w:document>`;
+    return makeZip([
+      {name:"[Content_Types].xml", data: XML + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="jpg" ContentType="image/jpeg"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>'},
+      {name:"_rels/.rels", data: XML + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>'},
+      {name:"word/_rels/document.xml.rels", data: XML + `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${rels.join("")}</Relationships>`},
+      {name:"word/document.xml", data: doc},
+      ...media,
+    ], "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+  }
+
+  /* ---------- PDF: opens the print dialog (choose "Save as PDF") ---------- */
+  async function exportPDF(D){
+    const imgs = {};
+    if (D.kind === "equip"){
+      for (const m of D.motors) for (const q of m.equip) for (const f of q.photos){
+        const th_ = await thumb(f.id, 900);
+        if (th_) imgs[f.id] = await toDataURL(th_.blob);
+      }
+    }
+    if (D.kind === "photos"){
+      for (const g of D.groups) for (const it of g.items){
+        const th_ = await thumb(it.f.id, 900);
+        if (th_) imgs[it.f.id] = await toDataURL(th_.blob);
+      }
+    }
+    const land = D.kind === "motors";
+    const css = `@page{size:A4${land ? " landscape" : ""};margin:${land ? "10mm" : "14mm"}}*{box-sizing:border-box}
+body{font-family:"Segoe UI",Tahoma,Roboto,Arial,sans-serif;color:#1f3a7a;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.hd{background:#1f3a7a;color:#fff;padding:14px 18px;border-radius:8px;margin-bottom:14px}
+.hd h1{font-size:20px;margin:0}.hd p{margin:5px 0 0;font-size:11px;opacity:.85}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:#4a80e8;color:#fff;padding:8px;border:1px solid #b9c8ea}
+td{padding:7px 8px;border:1px solid #b9c8ea}
+tr{break-inside:avoid}
+tbody tr:nth-child(even){background:#f5f8fe}
+.c{text-align:center}
+tfoot td{background:#e8eefb;font-weight:bold;border-top:2px solid #4a80e8}
+table.mt{font-size:9.5px}table.mt th,table.mt td{padding:4px 5px;text-align:center}
+table.mt td.l{text-align:start}
+table.mt tr.gr td{background:#1f3a7a;color:#fff;font-weight:bold;font-size:11px;text-align:start}
+.m{background:#1f3a7a;color:#fff;padding:9px 12px;border-radius:6px;font-weight:bold;font-size:14px;margin:18px 0 8px;break-after:avoid}
+.q{margin:0 0 12px;break-inside:avoid}
+.q h3{font-size:13px;color:#4a80e8;margin:0 0 5px}
+.q p{font-size:11px;color:#444;font-style:italic;margin:0 0 5px}
+.ph img{height:70px;width:auto;margin:6px 6px 0 0;border:1px solid #ccd6ee;border-radius:3px}
+.no{color:#8a97b5;font-size:12px;font-style:italic}
+figure{margin:0}
+.pg{display:flex;flex-wrap:wrap;gap:8px}
+.fg{width:calc(50% - 4px);margin:0 0 6px;break-inside:avoid}
+.fg img{width:100%;max-height:220px;object-fit:contain;border:1px solid #ccd6ee;border-radius:4px;background:#f5f8fe}
+.fg figcaption{font-size:10px;color:#444;margin-top:2px;text-align:center}`;
+    let html = `<div class="hd"><h1>${esc(D.title)}</h1><p>${esc(D.sub)} · ${esc(D.date)}</p></div>`;
+    if (D.kind === "motors"){
+      const span = 2 + D.cols.length;
+      html += `<table class="mt"><thead><tr><th>#</th><th>${esc(t("thMotor"))}</th>${D.cols.map(c => `<th>${esc(c.label)}</th>`).join("")}</tr></thead><tbody>` +
+        D.groups.map(g => `<tr class="gr"><td colspan="${span}">🗄 ${esc(g.name)}${g.loc ? " · " + esc(g.loc) : ""}</td></tr>` +
+          g.rows.map(x => `<tr><td>${x.i}</td><td class="l">${esc(x.name)}</td>${x.vals.map(v => `<td>${esc(v)}</td>`).join("")}</tr>`).join("")).join("") +
+        `</tbody><tfoot><tr><td>${D.total.count}</td><td class="l">${esc(t("totalMotors"))}</td>${D.cols.map(c => `<td>${c.tot === "kw" ? D.total.kw : c.tot === "a" ? D.total.a : ""}</td>`).join("")}</tr></tfoot></table>`;
+    } else if (D.kind === "photos"){
+      if (!D.groups.length) html += `<div class="no">${esc(t("noPhotosAll"))}</div>`;
+      D.groups.forEach(g => {
+        html += `<div class="m">⚙ ${esc(g.name)}</div>` + (g.loc ? `<div class="no" style="margin-bottom:6px">${esc(g.loc)}</div>` : "") +
+          `<div class="pg">` + g.items.map(it => `<figure class="fg">${imgs[it.f.id] ? `<img src="${imgs[it.f.id]}">` : ""}<figcaption>${esc(it.cap)}</figcaption></figure>`).join("") + `</div>`;
+      });
+    } else {
+      D.motors.forEach(m => {
+        html += `<div class="m">⚙ ${esc(m.name)}</div>`;
+        if (!m.equip.length) html += `<div class="no">${esc(t("noEquipReg"))}</div>`;
+        m.equip.forEach(q => {
+          html += `<div class="q"><h3>${esc(q.name)}</h3>${q.desc ? `<p>${esc(q.desc)}</p>` : ""}`;
+          if (q.specs.length) html += `<table><thead><tr><th style="text-align:start;width:38%">${esc(t("thParam"))}</th><th style="text-align:start">${esc(t("thValue"))}</th></tr></thead><tbody>` +
+            q.specs.map(([k,v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join("") + `</tbody></table>`;
+          const ph = q.photos.filter(f => imgs[f.id]).map(f => `<img src="${imgs[f.id]}">`).join("");
+          if (ph) html += `<div class="ph">${ph}</div>`;
+          html += `</div>`;
+        });
+      });
+    }
+    const fr = document.createElement("iframe");
+    fr.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0";
+    document.body.appendChild(fr);
+    const doc = fr.contentWindow.document;
+    doc.open();
+    doc.write(`<!DOCTYPE html><html dir="${isRTL() ? "rtl" : "ltr"}" lang="${LANG}"><head><meta charset="utf-8"><title>${esc(D.base)}</title><style>${css}</style></head><body>${html}</body></html>`);
+    doc.close();
+    await Promise.all([...doc.images].map(i => i.complete ? 1 : new Promise(r => { i.onload = i.onerror = r; })));
+    fr.contentWindow.focus();
+    fr.contentWindow.print();
+    setTimeout(() => fr.remove(), 120000);
+  }
+
+  /* ===== Admin actions ===== */
+  function addItem(list, lvl){
+    if (!admin) return;
+    const name = (prompt(t("newName", lvl.toLowerCase())) || "").trim();
+    if (!name) return;
+    if (list.some(n => n.name.toLowerCase() === name.toLowerCase())) { alert(t("exists")); return; }
+    list.push({id: uid(), name, children: []});
+    saveTree(); render();
+  }
+  function renameItem(n){
+    const name = (prompt(t("renamePrompt"), n.name) || "").trim();
+    if (!name) return;
+    n.name = name; saveTree(); render();
+  }
+  function removeItem(n){
+    if (!confirm(t("delItem", n.name))) return;
+    const {list} = walk();
+    const i = list.indexOf(n);
+    if (i > -1) list.splice(i,1);
+    dropAll(n);
+    saveTree(); saveDeleted(); render();
+  }
+  function dropAll(n){
+    del("img_" + n.id);
+    del("img_zh_" + n.id);
+    if (!deleted.includes(n.id)) deleted.push(n.id);
+    allFiles(n).forEach(f => dbDel(f.id));
+    n.children.forEach(dropAll);
+  }
+
+  /* ----- copy a whole folder (sub-items, specs, equipment, photos and files) ----- */
+  async function reId(n){
+    const old = n.id;
+    n.id = uid();
+    ["img_", "img_zh_"].forEach(p => { const v = load(p + old); if (v) save(p + n.id, v); });
+    ["zones", "zh"].forEach(k => {
+      if (texts[k] && texts[k][old]) texts[k][n.id] = JSON.parse(JSON.stringify(texts[k][old]));
+    });
+    const dup = async f => {
+      const b = await dbGet(f.id), id = uid();
+      if (b) await dbPut(id, b);
+      return {...f, id};
+    };
+    const dups = async arr => { const o = []; for (const f of (arr || [])) o.push(await dup(f)); return o; };
+    if (n.plate) n.plate = await dup(n.plate);
+    if (n.specFiles) n.specFiles = await dups(n.specFiles);
+    if (n.drawFiles) n.drawFiles = await dups(n.drawFiles);
+    for (const q of (n.equip || [])){
+      q.id = uid();
+      q.photos = await dups(q.photos);
+      q.files = await dups(q.files);
+    }
+    for (const k of (n.children || [])) await reId(k);
+  }
+  async function copyItem(list, n){
+    if (!admin) return;
+    toast(t("copying"), 0);
+    let name = n.name + t("copySuffix"), i = 2;
+    while (list.some(x => x.name.toLowerCase() === name.toLowerCase())) name = n.name + t("copySuffix") + " " + i++;
+    try{
+      const c = JSON.parse(JSON.stringify(n));
+      await reId(c);
+      c.name = name;
+      list.splice(list.indexOf(n) + 1, 0, c);
+      saveTree(); saveTexts();
+      toast(t("copied"), 2500);
+      render();
+    }catch(e){
+      console.error(e);
+      toast(t("saveFail"), 4000);
+    }
+  }
+
+  /* ===== Card, zone and banner photos (admin only) ===== */
+  const fileInput = $("file");
+  function pick(key){
+    if (!admin) return;
+    target = key; fileInput.value = ""; fileInput.click();
+  }
+  $("heroBtn").onclick = () => pick("hero");
+  fileInput.addEventListener("change", () => {
+    const f = fileInput.files[0];
+    if (!admin || !f || !target) return;
+    const tg = target, isHero = tg === "hero", isZh = tg.startsWith("zh_");
+    const isZone = !isHero && !isZh && tree.some(z => z.id === tg);
+    resize(f, (isHero || isZh) ? 900 : isZone ? 640 : 256, isHero || isZh || isZone)
+      .then(data => { if (save("img_" + tg, data)) render(); });
+  });
+  function resize(file, size, keepRatio){
+    return new Promise(res => {
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement("canvas"), ctx = c.getContext("2d");
+        if (keepRatio){
+          const r = Math.min(1, size / img.width);
+          c.width = img.width * r; c.height = img.height * r;
+          ctx.drawImage(img, 0, 0, c.width, c.height);
+        } else {
+          const s = Math.min(img.width, img.height);
+          c.width = c.height = size;
+          ctx.drawImage(img, (img.width-s)/2, (img.height-s)/2, s, s, 0, 0, size, size);
+        }
+        URL.revokeObjectURL(img.src);
+        res(c.toDataURL("image/jpeg", 0.85));
+      };
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
+  /* ===== Export / Import / Reset (admin only) ===== */
+  const toDataURL = b => new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(b); });
+  /* settings file: default theme + edited texts. Upload it as "config.json" next to the app:
+     everybody who opens the app online gets it automatically. */
+  function exportCfg(){
+    const c = {v:1, theme: load("themedefault") || null, texts};
+    dl(new Blob([JSON.stringify(c, null, 1)], {type:"application/json"}), "config.json");
+  }
+  async function doExport(){
+    const imgs = {};
+    for (let i = 0; i < localStorage.length; i++){
+      const k = localStorage.key(i);
+      if (k.startsWith("img_")) imgs[k] = localStorage.getItem(k);
+    }
+    const files = {};
+    for (const k of await dbKeys()) files[k] = await toDataURL(await dbGet(k));
+    const blob = new Blob([JSON.stringify({tree, deleted, imgs, files, users, texts})], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "workshop-data.json";
+    a.click();
+  }
+  $("imp").addEventListener("change", e => {
+    const f = e.target.files[0];
+    if (!f || !me || !me.owner) return;
+    const r = new FileReader();
+    r.onload = async () => {
+      try {
+        const d = JSON.parse(r.result);
+        if (!Array.isArray(d.tree)) throw 0;
+        tree = d.tree;
+        deleted = Array.isArray(d.deleted) ? d.deleted : [];
+        if (Array.isArray(d.users)){ users = d.users; saveUsers(); }
+        if (d.texts && typeof d.texts === "object"){ texts = d.texts; saveTexts(); }
+        merge(tree, seed());
+        saveTree(); saveDeleted();
+        Object.entries(d.imgs || {}).forEach(([k,v]) => save(k, v));
+        for (const [k,v] of Object.entries(d.files || {})) await dbPut(k, await (await fetch(v)).blob());
+        path = []; eqOpen = null; rep = null; render(); alert(t("imported"));
+      } catch(err){ alert(t("invalid")); }
+    };
+    r.readAsText(f);
+    e.target.value = "";
+  });
+  async function doReset(){
+    if (!confirm(t("resetQ"))) return;
+    Object.keys(localStorage).filter(k => k.startsWith("img_")).forEach(del);
+    await dbClear();
+    deleted = []; tree = seed();
+    saveTree(); saveDeleted(); path = []; eqOpen = null; rep = null; render();
+  }
+
+  /* ===== Search (inside a zone / room / panel) ===== */
+  $("q").addEventListener("input", e => {
+    const v = e.target.value.trim().toLowerCase();
+    $("grid").querySelectorAll(".card:not(.add):not(.rep)").forEach(c =>
+      c.classList.toggle("hidden", !c.dataset.name.includes(v)));
+  });
+
+  /* ===== Phone back button ===== */
+  history.replaceState({p:[], e:null, r:null}, "");
+  window.addEventListener("popstate", e => {
+    closeMenu();
+    if ($("lb").style.display === "grid") closeLightbox();
+    path = (e.state && e.state.p) ? [...e.state.p] : [];
+    eqOpen = (e.state && e.state.e) || null;
+    rep = (e.state && e.state.r) || null;
+    render();
+  });
+
+  applyTheme();
+  applyLang();
+  render();
+  pullRemote();
+  syncStart();
+  askPersist();
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
+</script>
+</body>
+</html>

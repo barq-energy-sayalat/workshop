@@ -1,4 +1,4 @@
-const CACHE = "workshop-v5";
+const CACHE = "workshop-v6";
 
 self.addEventListener("install", e => {
   self.skipWaiting();
@@ -12,11 +12,15 @@ self.addEventListener("activate", e =>
       .then(() => self.clients.claim())
   ));
 
-self.addEventListener("fetch", e =>
+self.addEventListener("fetch", e => {
+  const req = e.request;
+  // Only handle this app's own files. Cloud sync requests (Supabase) go straight to the network.
+  if (req.method !== "GET" || new URL(req.url).origin !== self.location.origin) return;
   e.respondWith(
-    fetch(e.request).then(res => {
+    fetch(req).then(res => {
       const copy = res.clone();
-      caches.open(CACHE).then(c => c.put(e.request, copy));
+      caches.open(CACHE).then(c => c.put(req, copy)).catch(() => {});
       return res;
-    }).catch(() => caches.match(e.request))
-  ));
+    }).catch(() => caches.match(req))
+  );
+});
